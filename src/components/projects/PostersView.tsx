@@ -18,7 +18,7 @@ export default function PostersView() {
           </Link>
 
           <div className="mt-16 md:mt-20">
-            <p className="max-w-xl text-sm leading-relaxed text-[#161513]/55">
+            <p className="max-w-xl text-sm leading-relaxed text-[#161513]/65">
               A collection of poster designs exploring typography, composition, visual hierarchy,
               and the intersection of form and function. Each piece is a study in restraint.
             </p>

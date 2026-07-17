@@ -10,7 +10,7 @@ export default function NotFoundPage() {
         <p className="mt-4 font-display text-4xl uppercase leading-tight text-[#161513]">
           Page Not Found
         </p>
-        <p className="mt-2 text-sm text-[#161513]/60">
+        <p className="mt-2 text-sm text-[#161513]/65">
           This route doesn't exist.
         </p>
         <Link

@@ -142,7 +142,7 @@ html, body {
   text-transform: uppercase;
   padding: 0 34px;
   color: var(--color-lime);
-  background-color: transparent;
+  background-color: rgba(201, 255, 61, 0.1);
   border: 2px solid var(--color-lime);
   border-radius: 9999px;
   cursor: pointer;

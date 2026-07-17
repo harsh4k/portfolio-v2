@@ -26,7 +26,7 @@ export default class ErrorBoundary extends Component<{ children: ReactNode }, St
             <p className="mt-4 font-display text-4xl uppercase leading-tight text-[#161513]">
               Unexpected Error
             </p>
-            <p className="mt-2 text-sm text-[#161513]/60">
+            <p className="mt-2 text-sm text-[#161513]/65">
               Try refreshing the page.
             </p>
             <button

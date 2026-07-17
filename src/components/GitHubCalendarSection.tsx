@@ -18,7 +18,7 @@ export default function GitHubCalendarSection() {
           <h2 className="font-display text-[clamp(3rem,13vw,7rem)] uppercase leading-[0.82] tracking-[-0.03em]">
             Code <span>Activity</span>
           </h2>
-          <p className="mt-4 max-w-lg text-sm leading-relaxed text-ink/50">
+          <p className="mt-4 max-w-lg text-sm leading-relaxed text-ink/65">
             A year&apos;s worth of commits, contributions, and late-night fixes.
           </p>
         </motion.div>

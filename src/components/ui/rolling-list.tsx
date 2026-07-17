@@ -46,7 +46,7 @@ function RollingTextItem(props: RollingTextItemProps & { key?: React.Key }) {
       </span>
 
       {item.description && (
-        <p className="mt-2 text-xs font-mono leading-relaxed text-[#161513]/55 max-w-md">
+        <p className="mt-2 text-xs font-mono leading-relaxed text-[#161513]/65 max-w-md">
           {item.description}
         </p>
       )}

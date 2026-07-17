@@ -51,7 +51,7 @@ export default function EditorialSidebar({
         </div>
       </div>
 
-      <p className="mt-6 max-w-prose text-sm leading-relaxed text-[#161513]/60">
+      <p className="mt-6 max-w-prose text-sm leading-relaxed text-[#161513]/65">
         {description}
       </p>
 
