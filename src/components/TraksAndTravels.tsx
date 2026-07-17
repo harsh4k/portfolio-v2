@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { useEffect, useRef } from "react";
 import { motion, useReducedMotion, useScroll, useTransform } from "motion/react";
 
 const fadeUp = {
@@ -24,6 +24,24 @@ export default function TraksAndTravels() {
     offset: ["start end", "end start"],
   });
   const parallaxY = useTransform(scrollYProgress, [0, 1], ["2%", "-2%"]);
+  const videoRef = useRef<HTMLVideoElement>(null);
+
+  // defer the 1.4MB video: load + play only when the section approaches the viewport
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          video.play().catch(() => {});
+          observer.disconnect();
+        }
+      },
+      { rootMargin: "400px" }
+    );
+    observer.observe(video);
+    return () => observer.disconnect();
+  }, []);
 
   return (
     <section
@@ -62,8 +80,9 @@ export default function TraksAndTravels() {
               className="h-full w-full"
             >
               <video
+                ref={videoRef}
                 src="/images/lbt_vid.mp4"
-                autoPlay
+                preload="none"
                 muted
                 loop
                 playsInline

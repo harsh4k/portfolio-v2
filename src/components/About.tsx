@@ -124,9 +124,12 @@ export default function About() {
                   className="aspect-[3/4] w-full overflow-hidden rounded-xl"
                 >
                   <img
-                    src="/images/profile.png"
+                    src="/images/profile.webp"
                     alt="Harshit Chauhan"
-                    fetchPriority="high"
+                    loading="lazy"
+                    decoding="async"
+                    width={800}
+                    height={1428}
                     className="h-full w-full object-cover grayscale"
                   />
                 </motion.div>

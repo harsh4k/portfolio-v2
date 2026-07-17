@@ -897,6 +897,8 @@ export const GithubCalendar = memo(function GithubCalendar({
                 <span className="text-[11px] text-ink/40 select-none">Game Mode</span>
                 <button
                   onClick={() => setGameActive(!gameActive)}
+                  aria-label="Toggle game mode"
+                  aria-pressed={gameActive}
                   className="relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none data-[state=active]:bg-signal data-[state=inactive]:bg-ink/20"
                   data-state={gameActive ? "active" : "inactive"}
                 >
