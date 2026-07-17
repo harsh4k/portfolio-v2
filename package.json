@@ -6,9 +6,10 @@
   "scripts": {
     "dev": "vite --port=3000 --host=0.0.0.0",
     "build": "vite build",
-    "preview": "vite preview",
+    "preview": "npm run build && wrangler dev",
     "clean": "node -e \"const fs=require('fs'); for (const path of ['dist','server.js']) fs.rmSync(path,{recursive:true,force:true});\"",
-    "lint": "tsc --noEmit"
+    "lint": "tsc --noEmit",
+    "deploy": "npm run build && wrangler deploy"
   },
   "dependencies": {
     "@paper-design/shaders-react": "^0.0.77",
@@ -27,12 +28,14 @@
     "tailwind-merge": "^3.6.0"
   },
   "devDependencies": {
+    "@cloudflare/vite-plugin": "^1.45.0",
     "@types/node": "^22.14.0",
     "autoprefixer": "^10.4.21",
     "esbuild": "^0.25.0",
     "tailwindcss": "^4.1.14",
     "tsx": "^4.21.0",
     "typescript": "~5.8.2",
-    "vite": "^6.2.3"
+    "vite": "^6.2.3",
+    "wrangler": "^4.111.0"
   }
 }
