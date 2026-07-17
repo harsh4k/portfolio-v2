@@ -26,6 +26,8 @@ export default function TrailGrid({
 
   const calculateGrid = useCallback(() => {
     if (typeof window === "undefined") return;
+    // Touch devices never show the grid (CSS hides it) — skip building the DOM at all.
+    if (!window.matchMedia("(hover: hover) and (pointer: fine)").matches) return;
     const cols = Math.ceil(document.documentElement.clientWidth / cellSize);
     const rows = Math.ceil(document.documentElement.clientHeight / cellSize);
     setGridDimensions({ cols, rows });

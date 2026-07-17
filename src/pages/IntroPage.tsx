@@ -1,19 +1,81 @@
-import { motion } from "motion/react";
+import { lazy, Suspense, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Cloud, FileText } from "lucide-react";
-import { MeshGradient } from "@paper-design/shaders-react";
 import TrailGrid from "../components/ui/trail-grid";
+
+// Single source for the intro palette — the shader and its static stand-in must match.
+const INTRO_COLORS = ["#000000", "#0A0A08", "#11110F", "#1C1B18"];
+
+// If the chunk fails to load (offline, stale deploy), keep the static gradient
+// instead of letting the ErrorBoundary blank the page over a decorative background.
+const MeshGradient = lazy(async () => {
+  try {
+    const m = await import("@paper-design/shaders-react");
+    return { default: m.MeshGradient };
+  } catch {
+    return { default: (() => null) as unknown as typeof import("@paper-design/shaders-react").MeshGradient };
+  }
+});
+
+/**
+ * Mounts the WebGL shader only after the page has loaded and the main thread
+ * is idle, so first paint / TBT never pay for shader compile + RAF loop.
+ * Until then the static gradient underneath (see IntroPage) is visible.
+ */
+function DeferredShader() {
+  const [ready, setReady] = useState(false);
+
+  useEffect(() => {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+    let cancelled = false;
+    const start = () => {
+      const fire = () => {
+        if (!cancelled) setReady(true);
+      };
+      if (typeof window.requestIdleCallback === "function") {
+        window.requestIdleCallback(fire, { timeout: 2000 });
+      } else {
+        window.setTimeout(fire, 300);
+      }
+    };
+
+    if (document.readyState === "complete") start();
+    else window.addEventListener("load", start, { once: true });
+
+    return () => {
+      cancelled = true;
+      window.removeEventListener("load", start);
+    };
+  }, []);
+
+  if (!ready) return null;
+
+  return (
+    <Suspense fallback={null}>
+      <MeshGradient
+        className="intro-fade fixed inset-0 h-full w-full"
+        colors={INTRO_COLORS}
+        speed={0.6}
+        backgroundColor={INTRO_COLORS[0]}
+      />
+    </Suspense>
+  );
+}
 
 export default function IntroPage() {
   return (
     <div className="relative min-h-screen w-full overflow-hidden bg-night text-paper antialiased">
-      {/* Animated shader background — sits behind everything */}
-      <MeshGradient
-        className="fixed inset-0 h-full w-full"
-        colors={["#000000", "#0A0A08", "#11110F", "#1C1B18"]}
-        speed={0.6}
-        backgroundColor="#000000"
+      {/* Static stand-in for the shader so first paint looks the same */}
+      <div
+        className="fixed inset-0"
+        style={{
+          background: `radial-gradient(120% 120% at 70% 25%, ${INTRO_COLORS[3]} 0%, ${INTRO_COLORS[1]} 50%, ${INTRO_COLORS[0]} 100%)`,
+        }}
       />
+
+      {/* Animated shader background — deferred, fades in over the static gradient */}
+      <DeferredShader />
 
       {/* Interactive grid — desktop/hover only, sits above the shader */}
       <TrailGrid cellSize={40} duration={180} cellColor="var(--color-paper)" />
@@ -25,46 +87,35 @@ export default function IntroPage() {
           className="pointer-events-none flex flex-col items-center text-paper"
           style={{ mixBlendMode: "difference" }}
         >
-          <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
-            className="mb-6 flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.28em]"
-          >
+          <div className="intro-rise mb-6 flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.28em]">
             <Cloud className="h-4 w-4 stroke-2" />
             CLaw
             <span className="mx-2 opacity-40">/</span>
             44.2442° N · 7.7694° E
-          </motion.div>
+          </div>
 
-          <motion.h1
-            initial={{ opacity: 0, y: 24 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.05, duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-            className="font-display text-[10vw] uppercase leading-[0.85] tracking-[-0.04em] sm:text-[8vw] lg:text-[6vw]"
+          <h1
+            className="intro-rise font-display text-[10vw] uppercase leading-[0.85] tracking-[-0.04em] sm:text-[8vw] lg:text-[6vw]"
+            style={{ animationDelay: "0.05s" }}
           >
             Harshit
             <br />
             Chauhan
-          </motion.h1>
+          </h1>
 
-          <motion.p
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.15, duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-            className="mt-6 max-w-md text-sm leading-relaxed sm:text-base"
+          <p
+            className="intro-rise mt-6 max-w-md text-sm leading-relaxed sm:text-base"
+            style={{ animationDelay: "0.15s" }}
           >
             Full-stack developer building fast, considered websites and tools —
             from luxury storefronts to local-first CLIs.
-          </motion.p>
+          </p>
         </div>
 
         {/* CTA row — outside the blend layer, keeps brand colors, clickable */}
-        <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.25, duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-          className="relative z-20 mt-14 flex flex-wrap items-center justify-center gap-8"
+        <div
+          className="intro-rise relative z-20 mt-14 flex flex-wrap items-center justify-center gap-8"
+          style={{ animationDelay: "0.25s" }}
         >
           <a href="/resume.pdf" target="_blank" rel="noreferrer" className="uv-resume">
             <FileText className="uv-resume__icon h-4 w-4" strokeWidth={2} />
@@ -77,7 +128,7 @@ export default function IntroPage() {
             <div className="uv-entry__drow1" />
             <div className="uv-entry__drow2" />
           </Link>
-        </motion.div>
+        </div>
       </main>
     </div>
   );
