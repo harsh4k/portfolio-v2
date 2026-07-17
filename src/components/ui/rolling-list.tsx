@@ -1,4 +1,6 @@
 import * as React from "react";
+import { useEffect, useState } from "react";
+import { motion } from "motion/react";
 import { cn } from "../../lib/utils";
 
 interface ListItem {
@@ -13,10 +15,12 @@ interface ListItem {
 
 interface RollingTextItemProps {
   item: ListItem;
+  index: number;
+  isMobile: boolean;
 }
 
 function RollingTextItem(props: RollingTextItemProps & { key?: React.Key }) {
-  const { item } = props;
+  const { item, index, isMobile } = props;
   return (
     <div className="group relative w-full cursor-pointer border-b border-[#161513]/12 py-6 last:border-b-0">
       <div className="relative overflow-hidden h-[60px] md:h-20">
@@ -47,15 +51,23 @@ function RollingTextItem(props: RollingTextItemProps & { key?: React.Key }) {
         </p>
       )}
 
-      <div
+      <motion.div
         className={cn(
           "z-20 h-52 w-full max-w-sm overflow-hidden rounded-xl shadow-[6px_6px_0_#161513] md:h-60 md:w-96",
-          "relative mt-4 opacity-100 scale-100 rotate-0 translate-x-0 pointer-events-auto",
+          "relative mt-4 pointer-events-auto",
           "md:absolute md:right-0 md:top-1/2 md:-translate-y-1/2 md:pointer-events-none",
           "md:opacity-0 md:scale-95 md:rotate-3 md:translate-x-4",
           "md:transition-all md:duration-500 md:ease-out",
           "md:group-hover:opacity-100 md:group-hover:scale-100 md:group-hover:rotate-0 md:group-hover:translate-x-0"
         )}
+        {...(isMobile
+          ? {
+              initial: { opacity: 0, scale: 0.9, y: 16 },
+              whileInView: { opacity: 1, scale: 1, y: 0 },
+              viewport: { once: true, margin: "-60px" },
+              transition: { duration: 0.6, delay: index * 0.1, ease: [0.16, 1, 0.3, 1] },
+            }
+          : {})}
       >
         <div className="relative h-full w-full">
           <img
@@ -70,7 +82,7 @@ function RollingTextItem(props: RollingTextItemProps & { key?: React.Key }) {
             style={{ backgroundColor: item.accent, opacity: 0.15 }}
           />
         </div>
-      </div>
+      </motion.div>
     </div>
   );
 }
@@ -80,10 +92,19 @@ interface RollingTextListProps {
 }
 
 function RollingTextList({ items }: RollingTextListProps) {
+  const [isMobile, setIsMobile] = useState(() => window.innerWidth < 768);
+
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 768);
+    check();
+    window.addEventListener("resize", check, { passive: true });
+    return () => window.removeEventListener("resize", check);
+  }, []);
+
   return (
     <div className="w-full flex flex-col">
-      {items.map((item) => (
-        <RollingTextItem key={item.id} item={item} />
+      {items.map((item, index) => (
+        <RollingTextItem key={item.id} item={item} index={index} isMobile={isMobile} />
       ))}
     </div>
   );

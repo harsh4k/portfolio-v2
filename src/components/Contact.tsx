@@ -47,7 +47,7 @@ export default function Contact() {
   return (
     <footer
       id="contact"
-      className="dark-grid relative min-h-screen border-t border-[#EEE9DC]/10 px-4 py-8 text-[#EEE9DC] select-none sm:px-6 md:px-12"
+      className="dark-grid relative min-h-screen border-t border-[#EEE9DC]/10 px-4 pt-8 pb-28 text-[#EEE9DC] select-none sm:px-6 md:px-12 md:pb-8"
     >
       <div className="mx-auto flex min-h-[calc(100vh-4rem)] max-w-[1600px] flex-col justify-between gap-12">
         <div className="flex items-start justify-between border-b border-[#EEE9DC]/10 pb-5 font-mono text-[10px] uppercase tracking-[0.2em] text-[#EEE9DC]/50">

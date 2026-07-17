@@ -28,7 +28,7 @@ export default function ThoughtsSection() {
           </p>
         </motion.div>
 
-        <div className="grid gap-6 md:grid-cols-3">
+        <div className="grid gap-6 pt-3 md:grid-cols-3 md:pt-0">
           {THOUGHTS.map((thought, i) => (
             <ThoughtCard key={thought.id} thought={thought} index={i} />
           ))}

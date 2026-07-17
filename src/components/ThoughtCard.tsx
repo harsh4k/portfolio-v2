@@ -27,7 +27,7 @@ export default function ThoughtCard({ thought, index }: ThoughtCardProps) {
         whileInView={{ opacity: 1, x: 0 }}
         viewport={{ once: true }}
         transition={{ duration: 0.8, delay: delay + 0.15, ease: [0.16, 1, 0.3, 1] }}
-        className="pointer-events-none absolute -top-4 left-0 z-10 select-none font-sans font-black text-[clamp(5rem,12vw,10rem)] leading-none text-white/[0.2]"
+        className="pointer-events-none absolute -top-[clamp(0.5rem,1.2vw,1rem)] left-0 z-10 select-none font-sans font-black text-[clamp(5rem,12vw,10rem)] leading-none text-white/[0.2]"
       >
         {thought.number}
       </motion.span>

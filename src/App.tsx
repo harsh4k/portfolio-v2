@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect } from "react";
+import { lazy, Suspense, useEffect, useLayoutEffect } from "react";
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import ErrorBoundary from "./components/ErrorBoundary";
 import IntroPage from "./pages/IntroPage";
@@ -9,6 +9,15 @@ function CanonicalUpdater() {
   useEffect(() => {
     const link = document.querySelector<HTMLLinkElement>('link[rel="canonical"]');
     if (link) link.href = `https://hxrshdev.vercel.app${pathname === "/" ? "" : pathname}`;
+  }, [pathname]);
+  return null;
+}
+
+// reset scroll on route change — otherwise a shorter page inherits the previous page's scroll offset
+function ScrollToTop() {
+  const { pathname } = useLocation();
+  useLayoutEffect(() => {
+    window.scrollTo(0, 0);
   }, [pathname]);
   return null;
 }
@@ -24,6 +33,7 @@ export default function App() {
     <ErrorBoundary>
       <BrowserRouter>
         <CanonicalUpdater />
+        <ScrollToTop />
         <Suspense fallback={null}>
           <Routes>
             <Route path="/" element={<IntroPage />} />

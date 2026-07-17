@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { lazy, Suspense, useEffect } from "react";
 import { motion } from "motion/react";
 import Lenis from "lenis";
 import Navbar from "../components/Navbar";
@@ -6,12 +6,17 @@ import About from "../components/About";
 import OffScreen from "../components/OffScreen";
 import TraksAndTravels from "../components/TraksAndTravels";
 import Projects from "../components/Projects";
-import Skills from "../components/Skills";
 import Journey from "../components/Journey";
-import GallerySection from "../components/GallerySection";
-import GitHubCalendarSection from "../components/GitHubCalendarSection";
 import ThoughtsSection from "../components/ThoughtsSection";
 import Contact from "../components/Contact";
+import LazyMount from "../components/LazyMount";
+
+// Deferred: only imported (and mounted) once each section nears the viewport —
+// keeps ogl, the calendar's canvas game, and GooeyText's rAF loop out of the
+// initial HomePage chunk and out of memory until they're actually needed.
+const Skills = lazy(() => import("../components/Skills"));
+const GallerySection = lazy(() => import("../components/GallerySection"));
+const GitHubCalendarSection = lazy(() => import("../components/GitHubCalendarSection"));
 
 export default function HomePage() {
   useEffect(() => {
@@ -57,15 +62,39 @@ export default function HomePage() {
         <Navbar />
         <main className="w-full flex flex-col">
           <About />
-          <OffScreen />
-          <TraksAndTravels />
-          <Projects />
-          <Skills />
-          <Journey />
-          <GallerySection />
-          <GitHubCalendarSection />
-          <ThoughtsSection />
-          <Contact />
+          <LazyMount minHeight="100vh">
+            <OffScreen />
+          </LazyMount>
+          <LazyMount minHeight="100vh">
+            <TraksAndTravels />
+          </LazyMount>
+          <LazyMount minHeight="100vh" id="work">
+            <Projects />
+          </LazyMount>
+          <LazyMount minHeight="100vh">
+            <Suspense fallback={null}>
+              <Skills />
+            </Suspense>
+          </LazyMount>
+          <LazyMount minHeight="100vh">
+            <Journey />
+          </LazyMount>
+          <LazyMount minHeight="100vh">
+            <Suspense fallback={null}>
+              <GallerySection />
+            </Suspense>
+          </LazyMount>
+          <LazyMount minHeight="100vh">
+            <Suspense fallback={null}>
+              <GitHubCalendarSection />
+            </Suspense>
+          </LazyMount>
+          <LazyMount minHeight="100vh">
+            <ThoughtsSection />
+          </LazyMount>
+          <LazyMount minHeight="100vh" id="contact">
+            <Contact />
+          </LazyMount>
         </main>
       </motion.div>
     </div>

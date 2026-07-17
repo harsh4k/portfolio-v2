@@ -8,7 +8,7 @@ const galleryItems: GalleryItem[] = Array.from({ length: 12 }, (_, i) => ({
 }));
 
 export default function GallerySection() {
-  const [isMobile, setIsMobile] = useState(false);
+  const [isMobile, setIsMobile] = useState(() => window.innerWidth < 768);
 
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth < 768);
@@ -45,9 +45,13 @@ export default function GallerySection() {
             className="-mx-4 flex snap-x snap-mandatory gap-4 overflow-x-auto px-4 pb-4 sm:-mx-6 sm:px-6"
             style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
           >
-            {galleryItems.map((item) => (
-              <div
+            {galleryItems.map((item, index) => (
+              <motion.div
                 key={item.text}
+                initial={{ opacity: 0, y: 24, scale: 0.96 }}
+                whileInView={{ opacity: 1, y: 0, scale: 1 }}
+                viewport={{ once: true, margin: "-60px" }}
+                transition={{ duration: 0.7, delay: index * 0.08, ease: [0.16, 1, 0.3, 1] }}
                 className="relative aspect-[4/5] w-[80vw] shrink-0 snap-center overflow-hidden rounded-2xl bg-[#161513]"
               >
                 <img
@@ -61,14 +65,14 @@ export default function GallerySection() {
                 <span className="absolute bottom-4 left-4 font-display text-xl uppercase tracking-tight text-white/80">
                   {item.text}
                 </span>
-              </div>
+              </motion.div>
             ))}
           </div>
         ) : (
           <div className="relative h-[500px] w-full md:h-[600px]" style={{ touchAction: "none" }}>
             <CircularGallery
               items={galleryItems}
-              bend={3}
+              bend={6}
               borderRadius={0.05}
               scrollEase={0.02}
             />
