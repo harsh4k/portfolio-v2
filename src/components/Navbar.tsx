@@ -1,7 +1,7 @@
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { motion } from "motion/react";
-import { Cloud, LayoutGrid, Briefcase, User, Mail } from "lucide-react";
+import { motion, AnimatePresence } from "motion/react";
+import { Cloud, Grid2x2, Code2, User, Mail } from "lucide-react";
 
 const PAGE_LINKS = [
   { id: "home", label: "Home", to: "/" },
@@ -14,9 +14,9 @@ const SECTION_LINKS = [
   { id: "contact", label: "Contact" },
 ];
 
-const DOCK_ICONS: Record<string, typeof Briefcase> = {
-  overview: LayoutGrid,
-  work: Briefcase,
+const DOCK_ICONS: Record<string, typeof Code2> = {
+  overview: Grid2x2,
+  work: Code2,
   about: User,
   contact: Mail,
 };
@@ -26,6 +26,24 @@ export default function Navbar() {
   const location = useLocation();
   const isHome = location.pathname === "/";
   const [hoveredId, setHoveredId] = useState<string | null>(null);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!menuOpen) return;
+    const onPointerDown = (e: PointerEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) setMenuOpen(false);
+    };
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setMenuOpen(false);
+    };
+    document.addEventListener("pointerdown", onPointerDown);
+    document.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.removeEventListener("pointerdown", onPointerDown);
+      document.removeEventListener("keydown", onKeyDown);
+    };
+  }, [menuOpen]);
 
   const scrollToSection = useCallback(
     (id: string) => {
@@ -121,34 +139,84 @@ export default function Navbar() {
           <span className="hidden font-mono text-[10px] uppercase tracking-[0.14em] text-ink/40 md:block">
             Mumbai, India
           </span>
+
+          {/* Mobile nav — hamburger opens a panel below the (top-fixed) bar */}
+          <div ref={menuRef} className="relative md:hidden">
+            <button
+              onClick={() => setMenuOpen((v) => !v)}
+              aria-expanded={menuOpen}
+              aria-label={menuOpen ? "Close menu" : "Open menu"}
+              className="flex h-9 w-9 items-center justify-center rounded-full border border-ink/10 text-ink transition-colors hover:bg-ink hover:text-paper focus:outline-none"
+            >
+              <svg
+                width={16}
+                height={16}
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path
+                  d="M4 12L20 12"
+                  className={`origin-center transition-all duration-300 ease-[cubic-bezier(.5,.85,.25,1.1)] ${
+                    menuOpen ? "translate-y-0 rotate-315" : "-translate-y-1.75"
+                  }`}
+                />
+                <path
+                  d="M4 12H20"
+                  className={`origin-center transition-all duration-300 ease-[cubic-bezier(.5,.85,.25,1.8)] ${
+                    menuOpen ? "rotate-45" : ""
+                  }`}
+                />
+                <path
+                  d="M4 12H20"
+                  className={`origin-center transition-all duration-300 ease-[cubic-bezier(.5,.85,.25,1.1)] ${
+                    menuOpen ? "translate-y-0 rotate-135" : "translate-y-1.75"
+                  }`}
+                />
+              </svg>
+            </button>
+
+            <AnimatePresence>
+              {menuOpen && (
+                <motion.div
+                  initial={{ opacity: 0, y: -8, filter: "blur(8px)" }}
+                  animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+                  exit={{ opacity: 0, y: -8, filter: "blur(8px)" }}
+                  transition={{ duration: 0.4, type: "spring", stiffness: 300, damping: 24 }}
+                  className="absolute top-full right-0 z-10 mt-2 w-44 overflow-hidden rounded-2xl border border-ink/10 bg-paper/95 p-1.5 shadow-[0_16px_32px_rgba(0,0,0,0.14)] backdrop-blur-md"
+                >
+                  {dockItems.map((item, index) => {
+                    const Icon = DOCK_ICONS[item.id];
+                    const active = item.id === "overview" && location.pathname === "/overview";
+                    return (
+                      <motion.button
+                        key={item.id}
+                        initial={{ opacity: 0, x: 12 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: 12 }}
+                        transition={{ duration: 0.25, delay: index * 0.05 }}
+                        onClick={() => {
+                          item.onClick();
+                          setMenuOpen(false);
+                        }}
+                        className={`flex w-full items-center gap-2.5 rounded-xl px-3.5 py-2.5 font-mono text-[11px] uppercase tracking-widest transition-colors ${
+                          active ? "bg-ink text-paper" : "text-ink/70 hover:bg-ink/5"
+                        }`}
+                      >
+                        <Icon className="h-4 w-4" />
+                        {item.label}
+                      </motion.button>
+                    );
+                  })}
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
         </div>
       </motion.nav>
-
-      {/* Mobile dock — persistent, no open/close state */}
-      <motion.div
-        initial={{ y: 40, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ delay: 0.2, duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-        className="fixed inset-x-0 bottom-[calc(1rem+env(safe-area-inset-bottom))] z-40 mx-auto flex w-fit items-center gap-1 rounded-full border border-ink/10 bg-paper/95 p-1.5 shadow-[0_8px_24px_rgba(0,0,0,0.12)] backdrop-blur-md md:hidden"
-      >
-        {dockItems.map((item) => {
-          const Icon = DOCK_ICONS[item.id];
-          const active = item.id === "overview" && location.pathname === "/overview";
-          return (
-            <motion.button
-              key={item.id}
-              onClick={item.onClick}
-              whileTap={{ scale: 0.9 }}
-              className={`flex flex-col items-center gap-0.5 rounded-full px-4 py-2 transition-colors ${
-                active ? "bg-ink text-paper" : "text-ink/70"
-              }`}
-            >
-              <Icon className="h-4 w-4" />
-              <span className="font-mono text-[9px] uppercase tracking-[0.1em]">{item.label}</span>
-            </motion.button>
-          );
-        })}
-      </motion.div>
     </>
   );
 }
