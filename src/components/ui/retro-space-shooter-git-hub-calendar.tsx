@@ -741,16 +741,17 @@ export const GithubCalendar = memo(function GithubCalendar({
       )}
     >
       <div className="w-fit mx-auto max-w-full flex flex-col gap-3 p-3">
-        <div
-          ref={scrollRef}
-          className={cn(
-            "relative overflow-x-auto transition-all duration-500",
-            gameActive ? "pb-[80px]" : "",
-          )}
-          style={
-            { scrollbarWidth: "none", msOverflowStyle: "none" } as CSSProperties
-          }
-        >
+        <div className="relative">
+          <div
+            ref={scrollRef}
+            className={cn(
+              "relative overflow-x-auto transition-all duration-500",
+              gameActive ? "pb-[80px]" : "",
+            )}
+            style={
+              { scrollbarWidth: "none", msOverflowStyle: "none" } as CSSProperties
+            }
+          >
           <svg
             width={svgWidth}
             height={svgHeight}
@@ -872,9 +873,22 @@ export const GithubCalendar = memo(function GithubCalendar({
                 </div>
               );
             })()}
+          </div>
+
+          {/* Hints that the grid scrolls horizontally on mobile — fixed to the
+              viewport edges (not the scrolled content) so they read as "more
+              here" regardless of scroll position, without shrinking cells. */}
+          <div
+            className="pointer-events-none absolute inset-y-0 left-0 w-6 md:hidden"
+            style={{ background: `linear-gradient(to right, ${gameActive ? "#0a0a0a" : "var(--color-paper)"}, transparent)` }}
+          />
+          <div
+            className="pointer-events-none absolute inset-y-0 right-0 w-6 md:hidden"
+            style={{ background: `linear-gradient(to left, ${gameActive ? "#0a0a0a" : "var(--color-paper)"}, transparent)` }}
+          />
         </div>
 
-        <div className="flex items-center justify-between gap-x-4">
+        <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
           <div className="flex flex-wrap items-center gap-4 text-xs text-ink/50 shrink-0 mt-0.5">
             <div className="flex items-center gap-1.5">
               <span>Less</span>
@@ -914,7 +928,7 @@ export const GithubCalendar = memo(function GithubCalendar({
               href={`https://github.com/${username}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-x-1 text-ink/50 hover:text-ink transition-colors no-underline"
+              className="flex flex-wrap items-center gap-x-1 text-ink/50 hover:text-ink transition-colors no-underline"
             >
               <span className="font-semibold">{username}</span>
               <span>contributed</span>
