@@ -88,11 +88,13 @@ export default function IntroPage() {
       {/* Animated shader background — deferred, fades in over the static gradient */}
       <DeferredShader />
 
-      {/* Interactive grid — desktop/hover only, sits above the shader */}
-      <TrailGrid cellSize={40} duration={180} cellColor="var(--color-paper)" />
-
       {/* Hero */}
       <main className="relative z-10 flex min-h-screen flex-col items-center justify-center px-6 text-center">
+        {/* Interactive grid — desktop/hover only. Must share a stacking context
+            with the mix-blend-mode text below (both inside <main>), otherwise
+            the blend can't see the grid's lit cells as its backdrop. */}
+        <TrailGrid cellSize={40} duration={180} cellColor="var(--color-paper)" />
+
         {/* Inverting block: everything here reacts to the grid via mix-blend */}
         <div
           className="pointer-events-none flex flex-col items-center text-paper"
