@@ -64,6 +64,7 @@ function DeferredShader() {
         speed={0.6}
         backgroundColor={INTRO_COLORS[0]}
         minPixelRatio={1}
+        maxPixelCount={1920 * 1080}
       />
     </Suspense>
   );
