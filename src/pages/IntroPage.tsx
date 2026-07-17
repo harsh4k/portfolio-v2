@@ -1,5 +1,5 @@
-import { lazy, Suspense, useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { lazy, Suspense, useEffect, useState, type MouseEvent } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { Cloud, FileText } from "lucide-react";
 import TrailGrid from "../components/ui/trail-grid";
 
@@ -70,10 +70,26 @@ function DeferredShader() {
   );
 }
 
+// Longest of the .uv-entry hover transitions (index.css) — the line-draw
+// width transition runs 0.5s, longer than the drow burst (0.38s total).
+const OVERVIEW_ANIMATION_MS = 520;
+
 export default function IntroPage() {
+  const navigate = useNavigate();
+  const [leaving, setLeaving] = useState(false);
+
   // Warms the /overview chunk while the visitor is still reading the intro,
   // so clicking OVERVIEW doesn't hit a cold-cache download + blank Suspense.
   useEffect(() => onIdle(() => { void import("./HomePage"); }), []);
+
+  const handleOverviewClick = (e: MouseEvent<HTMLAnchorElement>) => {
+    // Let modified/non-primary clicks (open in new tab, etc.) behave normally.
+    if (leaving || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+    e.preventDefault();
+    setLeaving(true);
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    window.setTimeout(() => navigate("/overview"), reduced ? 0 : OVERVIEW_ANIMATION_MS);
+  };
 
   return (
     <div className="relative min-h-screen w-full overflow-hidden bg-night text-paper antialiased">
@@ -134,7 +150,11 @@ export default function IntroPage() {
             <FileText className="uv-resume__icon h-4 w-4" strokeWidth={2} />
             <span>Resume</span>
           </a>
-          <Link to="/overview" className="uv-entry">
+          {/* ponytail: animation is CSS :hover-driven, so the delayed-navigate
+              trick only guarantees the full play-through on mouse (the pointer
+              stays over the link through the delay). Add a synthetic
+              hover/active class in index.css if touch needs the same effect. */}
+          <Link to="/overview" className="uv-entry" onClick={handleOverviewClick}>
             <div className="uv-entry__line" />
             <div className="uv-entry__line" />
             <span className="uv-entry__text">OVERVIEW</span>
