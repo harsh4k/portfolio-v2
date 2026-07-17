@@ -371,10 +371,22 @@ export const GithubCalendar = memo(function GithubCalendar({
   const svgWidth = weeks.length * step - cellGap;
   const svgHeight = monthLabelHeight + 7 * step - cellGap;
 
+  const [scrollHints, setScrollHints] = useState({ left: false, right: false });
+
   useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollLeft = scrollRef.current.scrollWidth;
-    }
+    const el = scrollRef.current;
+    if (!el) return;
+    el.scrollLeft = el.scrollWidth;
+
+    const updateScrollHints = () => {
+      setScrollHints({
+        left: el.scrollLeft > 1,
+        right: el.scrollLeft < el.scrollWidth - el.clientWidth - 1,
+      });
+    };
+    updateScrollHints();
+    el.addEventListener("scroll", updateScrollHints);
+    return () => el.removeEventListener("scroll", updateScrollHints);
   }, [fetchedData]);
 
   // Game loop
@@ -735,7 +747,7 @@ export const GithubCalendar = memo(function GithubCalendar({
   return (
     <div
       className={cn(
-        "w-fit mx-auto overflow-x-hidden transition-all duration-500",
+        "w-fit max-w-full mx-auto overflow-x-hidden transition-all duration-500",
         gameActive ? "bg-[#0a0a0a] rounded-lg" : "",
         className,
       )}
@@ -876,16 +888,23 @@ export const GithubCalendar = memo(function GithubCalendar({
           </div>
 
           {/* Hints that the grid scrolls horizontally on mobile — fixed to the
-              viewport edges (not the scrolled content) so they read as "more
-              here" regardless of scroll position, without shrinking cells. */}
-          <div
-            className="pointer-events-none absolute inset-y-0 left-0 w-6 md:hidden"
-            style={{ background: `linear-gradient(to right, ${gameActive ? "#0a0a0a" : "var(--color-paper)"}, transparent)` }}
-          />
-          <div
-            className="pointer-events-none absolute inset-y-0 right-0 w-6 md:hidden"
-            style={{ background: `linear-gradient(to left, ${gameActive ? "#0a0a0a" : "var(--color-paper)"}, transparent)` }}
-          />
+              viewport edges (not the scrolled content), and only shown on the
+              side that actually has more to scroll to. The grid opens
+              auto-scrolled to today (the right edge), so an always-on right
+              fade used to permanently dim the most recent cell instead of
+              hinting at anything. */}
+          {scrollHints.left && (
+            <div
+              className="pointer-events-none absolute inset-y-0 left-0 w-6 md:hidden"
+              style={{ background: `linear-gradient(to right, ${gameActive ? "#0a0a0a" : "var(--color-paper)"}, transparent)` }}
+            />
+          )}
+          {scrollHints.right && (
+            <div
+              className="pointer-events-none absolute inset-y-0 right-0 w-6 md:hidden"
+              style={{ background: `linear-gradient(to left, ${gameActive ? "#0a0a0a" : "var(--color-paper)"}, transparent)` }}
+            />
+          )}
         </div>
 
         <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
