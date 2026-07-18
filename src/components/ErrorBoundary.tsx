@@ -8,7 +8,7 @@ interface State {
   hasError: boolean;
 }
 
-export default class ErrorBoundary extends Component<{ children: ReactNode }, State> {
+export default class ErrorBoundary extends Component<Props, State> {
   state: State = { hasError: false };
 
   static getDerivedStateFromError() {
@@ -40,6 +40,7 @@ export default class ErrorBoundary extends Component<{ children: ReactNode }, St
       );
     }
 
+    // no @types/react in this project, so tsc can't see props inherited from Component
     return (this as any).props.children;
   }
 }
