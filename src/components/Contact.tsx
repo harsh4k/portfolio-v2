@@ -114,7 +114,7 @@ export default function Contact() {
                   <div className="mb-6 flex items-center justify-between">
                     <span className="font-sans text-[9px] uppercase tracking-[0.18em] opacity-55">{link.label}</span>
                     {isCopied ? (
-                      <span className="flex items-center gap-1 font-sans text-[8px] uppercase tracking-[0.14em] text-[#C9FF3D]">
+                      <span className="flex items-center gap-1 font-sans text-[8px] uppercase tracking-[0.14em] text-signal">
                         <Copy className="h-3 w-3" /> Copied
                       </span>
                     ) : (
