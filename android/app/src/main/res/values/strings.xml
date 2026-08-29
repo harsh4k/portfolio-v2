@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Harshit</string>
+    <string name="launch_url" translatable="false">https://harshh.pages.dev/</string>
+    <string name="tile_label">Portfolio</string>
+    <string name="widget_description">One-tap shortcuts into the portfolio.</string>
+    <string name="shortcut_overview">Overview</string>
+    <string name="shortcut_websites">Websites</string>
+    <string name="shortcut_posters">Posters</string>
+
+    <!-- The web half of the Digital Asset Links handshake. The other half is
+         /.well-known/assetlinks.json on the site, which must carry this APK's
+         release signing SHA-256. If they disagree, the TWA shows a URL bar. -->
+    <string name="asset_statements" translatable="false">
+        [{
+          \"relation\": [\"delegate_permission/common.handle_all_urls\"],
+          \"target\": {
+            \"namespace\": \"web\",
+            \"site\": \"https://harshh.pages.dev\"
+          }
+        }]
+    </string>
+</resources>

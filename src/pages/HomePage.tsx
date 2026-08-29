@@ -1,6 +1,7 @@
 import { lazy, Suspense, useEffect } from "react";
 import { motion } from "motion/react";
 import Lenis from "lenis";
+import { useIsMobile } from "../hooks/use-media";
 import Navbar from "../components/Navbar";
 import About from "../components/About";
 import OffScreen from "../components/OffScreen";
@@ -19,8 +20,11 @@ const GallerySection = lazy(() => import("../components/GallerySection"));
 const GitHubCalendarSection = lazy(() => import("../components/GitHubCalendarSection"));
 
 export default function HomePage() {
+  // matchMedia-backed so this re-evaluates on resize/rotate — native momentum
+  // scrolling is smoother than Lenis on touch, so mobile skips it entirely.
+  const isMobile = useIsMobile();
+
   useEffect(() => {
-    const isMobile = window.innerWidth < 768;
     if (isMobile) return;
 
     const lenis = new Lenis({
@@ -30,6 +34,20 @@ export default function HomePage() {
       infinite: false,
     });
 
+    // Sections mount lazily as they near the viewport, so the document height
+    // changes mid-scroll. Lenis debounces its own resize by 250ms and animates
+    // against stale dimensions until it catches up, which surfaced as a single
+    // ~200px scroll lurch. Resync the moment the height actually moves.
+    let lastHeight = document.documentElement.scrollHeight;
+    const resizeObserver = new ResizeObserver(() => {
+      const height = document.documentElement.scrollHeight;
+      if (height === lastHeight) return;
+      lastHeight = height;
+      lenis.resize();
+    });
+    resizeObserver.observe(document.documentElement);
+    resizeObserver.observe(document.body);
+
     let rafId: number;
     function raf(time: number) {
       lenis.raf(time);
@@ -38,9 +56,10 @@ export default function HomePage() {
     rafId = requestAnimationFrame(raf);
     return () => {
       cancelAnimationFrame(rafId);
+      resizeObserver.disconnect();
       lenis.destroy();
     };
-  }, []);
+  }, [isMobile]);
 
   return (
     <div className="relative min-h-screen w-full bg-[#EEE9DC] text-[#161513] overflow-hidden antialiased">

@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/widget_root"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/widget_background"
+    android:orientation="horizontal"
+    android:padding="10dp"
+    android:baselineAligned="false">
+
+    <TextView
+        android:id="@+id/widget_overview"
+        style="@style/WidgetChip"
+        android:text="@string/shortcut_overview" />
+
+    <TextView
+        android:id="@+id/widget_work"
+        style="@style/WidgetChip"
+        android:text="@string/shortcut_websites" />
+
+    <TextView
+        android:id="@+id/widget_posters"
+        style="@style/WidgetChip"
+        android:text="@string/shortcut_posters" />
+</LinearLayout>

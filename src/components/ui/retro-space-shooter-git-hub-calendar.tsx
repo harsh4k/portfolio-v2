@@ -100,12 +100,18 @@ function formatTooltipDate(dateStr: string): string {
 
 const CACHE_TTL_MS = 60 * 60 * 1000;
 
-function readCachedContributions(username: string): ContributionData | null {
+// localStorage rather than sessionStorage: an installed PWA starts a fresh
+// session on every cold launch, so a session-scoped cache is always empty
+// exactly when it matters most — opening the app with no network.
+function readCachedContributions(
+  username: string,
+  { allowStale = false }: { allowStale?: boolean } = {},
+): ContributionData | null {
   try {
-    const raw = sessionStorage.getItem(`gh-contrib:${username}`);
+    const raw = localStorage.getItem(`gh-contrib:${username}`);
     if (!raw) return null;
     const { data, savedAt } = JSON.parse(raw) as { data: ContributionData; savedAt: number };
-    if (Date.now() - savedAt > CACHE_TTL_MS) return null;
+    if (!allowStale && Date.now() - savedAt > CACHE_TTL_MS) return null;
     return data;
   } catch {
     return null;
@@ -114,7 +120,7 @@ function readCachedContributions(username: string): ContributionData | null {
 
 function writeCachedContributions(username: string, data: ContributionData) {
   try {
-    sessionStorage.setItem(`gh-contrib:${username}`, JSON.stringify({ data, savedAt: Date.now() }));
+    localStorage.setItem(`gh-contrib:${username}`, JSON.stringify({ data, savedAt: Date.now() }));
   } catch {
     // storage full or unavailable (e.g. private browsing) — caching is best-effort
   }
@@ -124,25 +130,32 @@ async function fetchContributions(username: string): Promise<ContributionData> {
   const cached = readCachedContributions(username);
   if (cached) return cached;
 
-  const res = await fetch(
-    `https://github-contributions-api.jogruber.de/v4/${username}`,
-  );
-  if (!res.ok) {
-    throw new Error(
-      `Could not fetch contributions for "${username}" (${res.status})`,
+  try {
+    const res = await fetch(
+      `https://github-contributions-api.jogruber.de/v4/${username}`,
     );
-  }
-  const json: { total: Record<string, number>; contributions: { date: string; count: number; level: number }[] } = await res.json();
+    if (!res.ok) {
+      throw new Error(
+        `Could not fetch contributions for "${username}" (${res.status})`,
+      );
+    }
+    const json: { total: Record<string, number>; contributions: { date: string; count: number; level: number }[] } = await res.json();
 
-  const result: ContributionData = {};
-  for (const entry of json.contributions) {
-    result[entry.date] = {
-      level: Math.min(4, Math.max(0, entry.level)) as ContributionLevel,
-      count: entry.count,
-    };
+    const result: ContributionData = {};
+    for (const entry of json.contributions) {
+      result[entry.date] = {
+        level: Math.min(4, Math.max(0, entry.level)) as ContributionLevel,
+        count: entry.count,
+      };
+    }
+    writeCachedContributions(username, result);
+    return result;
+  } catch (err) {
+    // Offline or the API is down: last-known contributions beat an error card.
+    const stale = readCachedContributions(username, { allowStale: true });
+    if (stale) return stale;
+    throw err;
   }
-  writeCachedContributions(username, result);
-  return result;
 }
 
 function buildGrid(
@@ -215,50 +228,6 @@ type TooltipState = {
   x: number;
   y: number;
 };
-
-function CalendarSkeleton({
-  cellSize = 12,
-  cellGap = 3,
-  className,
-}: {
-  cellSize?: number;
-  cellGap?: number;
-  className?: string;
-}) {
-  const step = cellSize + cellGap;
-  const weeks = 53;
-  const days = 7;
-  return (
-    <div className={cn("w-fit mx-auto space-y-3 animate-pulse", className)}>
-      <div className="flex gap-6">
-        <div className="h-4 w-32 rounded bg-ink/10" />
-        <div className="h-4 w-20 rounded bg-ink/10" />
-        <div className="h-4 w-24 rounded bg-ink/10" />
-      </div>
-      <div className="overflow-x-auto">
-        <svg
-          width={weeks * step - cellGap}
-          height={16 + days * step - cellGap}
-          className="overflow-visible"
-        >
-          {Array.from({ length: weeks }).map((_, wi) =>
-            Array.from({ length: days }).map((_, di) => (
-              <rect
-                key={`${wi}-${di}`}
-                x={wi * step}
-                y={16 + di * step}
-                width={cellSize}
-                height={cellSize}
-                rx={cellSize * 0.2}
-                className="fill-ink/8"
-              />
-            )),
-          )}
-        </svg>
-      </div>
-    </div>
-  );
-}
 
 export const GithubCalendar = memo(function GithubCalendar({
   username,
@@ -334,7 +303,13 @@ export const GithubCalendar = memo(function GithubCalendar({
   );
 
   const stats = useMemo(() => {
-    const entries = Object.entries(data);
+    // The API returns every calendar year the account has (2024, 2025, 2026…),
+    // so summing all of it counts years the grid never shows — that's how a
+    // 431-contribution year rendered as 432. Scope the totals to the same
+    // rolling 12-month window the cells are built from.
+    const entries = Object.entries(data).filter(
+      ([date]) => date >= resolvedStart && date <= resolvedEnd,
+    );
     const total = entries.reduce(
       (sum, [, v]) => sum + (v.count ?? (v.level > 0 ? 1 : 0)),
       0,
@@ -364,7 +339,7 @@ export const GithubCalendar = memo(function GithubCalendar({
       return max;
     })();
     return { total, activeDays, maxStreak };
-  }, [data]);
+  }, [data, resolvedStart, resolvedEnd]);
 
   const step = cellSize + cellGap;
   const monthLabelHeight = gameActive ? 0 : 20;
@@ -379,10 +354,13 @@ export const GithubCalendar = memo(function GithubCalendar({
     el.scrollLeft = el.scrollWidth;
 
     const updateScrollHints = () => {
-      setScrollHints({
-        left: el.scrollLeft > 1,
-        right: el.scrollLeft < el.scrollWidth - el.clientWidth - 1,
-      });
+      const left = el.scrollLeft > 1;
+      const right = el.scrollLeft < el.scrollWidth - el.clientWidth - 1;
+      // A fresh object every scroll event would re-render all ~375 cells even
+      // when neither hint changed; only commit when one actually flips.
+      setScrollHints((prev) =>
+        prev.left === left && prev.right === right ? prev : { left, right },
+      );
     };
     updateScrollHints();
     el.addEventListener("scroll", updateScrollHints);
@@ -704,50 +682,12 @@ export const GithubCalendar = memo(function GithubCalendar({
     svgHeight,
   ]);
 
-  if (loading) {
-    return (
-      <CalendarSkeleton
-        cellSize={cellSize}
-        cellGap={cellGap}
-        className={className}
-      />
-    );
-  }
-
-  if (fetchError) {
-    return (
-      <div
-        className={cn(
-          "w-fit mx-auto flex items-center gap-2 rounded-md border border-signal/30 bg-signal/10 px-4 py-3 text-sm text-signal",
-          className,
-        )}
-      >
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          width="16"
-          height="16"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        >
-          <circle cx="12" cy="12" r="10" />
-          <line x1="12" y1="8" x2="12" y2="12" />
-          <line x1="12" y1="16" x2="12.01" y2="16" />
-        </svg>
-        {fetchError}
-      </div>
-    );
-  }
-
   const cellRx = cellSize * 0.2;
 
   return (
     <div
       className={cn(
-        "w-fit max-w-full mx-auto overflow-x-hidden transition-all duration-500",
+        "w-fit max-w-full mx-auto overflow-x-hidden transition-colors duration-500",
         gameActive ? "bg-[#0a0a0a] rounded-lg" : "",
         className,
       )}
@@ -757,18 +697,24 @@ export const GithubCalendar = memo(function GithubCalendar({
           <div
             ref={scrollRef}
             className={cn(
-              "relative overflow-x-auto transition-all duration-500",
+              "relative overflow-x-auto transition-[padding] duration-500",
               gameActive ? "pb-[80px]" : "",
             )}
             style={
               { scrollbarWidth: "none", msOverflowStyle: "none" } as CSSProperties
             }
           >
+          {/* The grid geometry comes from the date range, not the data, so the
+              loading state renders this exact same SVG with every cell at
+              level 0 and merely pulses it. Swapping in a differently-shaped
+              skeleton used to change the section height by 34px the moment
+              the fetch resolved, and Lenis (which debounces its own resize by
+              250ms) reacted to that mid-scroll with a ~200px lurch. */}
           <svg
             width={svgWidth}
             height={svgHeight}
             viewBox={`0 0 ${svgWidth} ${svgHeight}`}
-            className="overflow-visible"
+            className={cn("overflow-visible", loading && "animate-pulse")}
           >
             {!gameActive &&
               (() => {
@@ -951,8 +897,17 @@ export const GithubCalendar = memo(function GithubCalendar({
             >
               <span className="font-semibold">{username}</span>
               <span>contributed</span>
-              <span className="font-bold text-[#0e4429]">{stats.total.toLocaleString()}</span>
-              <span>contributions this year</span>
+              {loading ? (
+                <span className="inline-block h-3 w-8 animate-pulse rounded bg-ink/15" />
+              ) : (
+                <span className="font-bold tabular-nums text-[#0e4429]">
+                  {stats.total.toLocaleString()}
+                </span>
+              )}
+              <span>contributions in the past year</span>
+              {fetchError && !loading && (
+                <span className="text-ink/35">· offline, may be out of date</span>
+              )}
             </a>
           </div>
         </div>

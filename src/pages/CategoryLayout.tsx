@@ -18,7 +18,8 @@ export default function CategoryLayout({ children }: Props) {
 
       <Navbar />
 
-      <main className="w-full min-h-screen paper-grid border-t border-[#161513]/15 px-4 py-8 text-[#161513] select-none sm:px-6 md:px-12">
+      {/* pb clears the bottom-docked nav, which is fixed over the page */}
+      <main className="w-full min-h-screen paper-grid border-t border-[#161513]/15 px-4 py-8 pb-[calc(7rem+env(safe-area-inset-bottom))] text-[#161513] select-none sm:px-6 md:px-12">
         {children}
       </main>
     </div>

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Matches the site's night token (index.css) and the web manifest's
+         background_color, so the native splash hands over to the web intro
+         with no colour jump. -->
+    <color name="splash_background">#11110F</color>
+    <color name="ink">#161513</color>
+    <color name="paper">#EEE9DC</color>
+</resources>
