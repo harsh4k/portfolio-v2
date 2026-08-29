@@ -9,11 +9,16 @@
   src: url("/fonts/archivo-black-latin.woff2") format("woff2");
 }
 @font-face {
-  font-family: "Inter";
+  /* Body face. Same superfamily as the display weight above, so body and
+     display read as one intentional family rather than two grotesques
+     bolted together. Variable 100–900 — replaced Inter, whose weight-400
+     default (no font-weight declared anywhere on html/body) was the main
+     cause of the app reading "thin". */
+  font-family: "Archivo";
   font-style: normal;
   font-weight: 100 900;
   font-display: swap;
-  src: url("/fonts/inter-var-latin.woff2") format("woff2");
+  src: url("/fonts/archivo-var-latin.woff2") format("woff2");
 }
 @font-face {
   font-family: "JetBrains Mono";
@@ -24,8 +29,8 @@
 }
 
 @theme {
-  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
-  --font-display: "Archivo Black", "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Archivo", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Archivo Black", "Archivo", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
   --color-bg-base: #EEE9DC;
   --color-ink: #161513;
@@ -34,6 +39,18 @@
   --color-signal: #F13A18;
   --color-lime: #C9FF3D;
   --color-mist: #D8D1C1;
+
+  /* Type scale + weights. Previously absent entirely — every size in the app
+     was an arbitrary value (text-[10px], text-[clamp(...)]) and no weight
+     was ever set, so everything inherited the browser default of 400. */
+  --text-micro: 0.6875rem;   /* 11px — the uppercase/tracked label size */
+  --text-caption: 0.75rem;   /* 12px */
+  --text-body: 0.875rem;     /* 14px — the prevailing paragraph size */
+  --text-lead: 1rem;         /* 16px */
+
+  --font-weight-body: 460;
+  --font-weight-label: 500;
+  --font-weight-emphasis: 600;
 }
 
 /* Base rules */
@@ -41,12 +58,15 @@ html, body {
   background-color: #EEE9DC;
   color: #161513;
   font-family: var(--font-sans);
+  font-weight: var(--font-weight-body);
   /* clip, not hidden: hidden makes this a scroll container and silently
      breaks every position:sticky descendant. clip crops without one. */
   overflow-x: clip;
   margin: 0;
   padding: 0;
-  -webkit-font-smoothing: antialiased;
+  /* No forced antialiasing — it thins strokes on macOS/Safari relative to
+     the platform default of subpixel-antialiased, compounding the
+     thin-looking type at the small sizes this app leans on. */
 }
 
 /* Scrollbar styling - raw, surgical brutalism */
@@ -103,6 +123,19 @@ html, body {
     transparent 1px,
     transparent 9px
   );
+}
+
+/* The uppercase/tracked micro-label pattern (`font-sans text-[10px] uppercase
+   tracking-[0.18em] text-ink/40`) was hand-rolled ~48 times, always at
+   weight 400 with opacity as low as /30 — tiny, spaced, faded and thin all
+   at once. One utility, at a real weight and a readable opacity floor. */
+.label-micro {
+  font-family: var(--font-sans);
+  font-size: var(--text-micro);
+  font-weight: var(--font-weight-label);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  opacity: 0.6;
 }
 
 /* ===== Operating Range map =====

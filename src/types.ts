@@ -9,10 +9,16 @@ export interface Project {
   title: string;
   category: "websites" | "fun";
   role: string;
+  year: string;
+  /** Free-form ship state shown in the dossier's spec strip, e.g. "Shipped" or "In progress". */
+  status: string;
   description: string;
   tags: string[];
+  /** Index plate image. May differ from detail.cover for a tighter grid crop. */
   visual: string;
-  link: string;
+  /** At least one of liveUrl / repoUrl must be set — the plate's link chip prefers liveUrl. */
+  liveUrl?: string;
+  repoUrl?: string;
   detail: ProjectDetail;
 }
 
