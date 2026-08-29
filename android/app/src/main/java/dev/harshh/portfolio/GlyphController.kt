@@ -79,15 +79,11 @@ class GlyphController(private val context: Context) {
         val gm = manager ?: return
         if (!sessionOpen) return
         try {
-            // buildChannel(int) is inferred from the GDK's device table, which
-            // documents Phone (4b) channels A1..A4 as ints 0..3 but does not
-            // print the signature. If the AAR exposes a differently-named
-            // builder method, this is the one line to adjust.
             val frame = gm.glyphFrameBuilder
-                .buildChannel(CHANNEL_A1)
-                .buildChannel(CHANNEL_A2)
-                .buildChannel(CHANNEL_A3)
-                .buildChannel(CHANNEL_A4)
+                .buildChannel(Glyph.Code_25131.A_1)
+                .buildChannel(Glyph.Code_25131.A_2)
+                .buildChannel(Glyph.Code_25131.A_3)
+                .buildChannel(Glyph.Code_25131.A_4)
                 .buildInterval(INTERVAL_MS)
                 .buildCycles(CYCLES)
                 .buildPeriod(PERIOD_MS)
@@ -102,6 +98,8 @@ class GlyphController(private val context: Context) {
 
     fun release() {
         val gm = manager ?: return
+        // turnOff() clears the bar; without it the last frame can linger.
+        runCatching { gm.turnOff() }
         runCatching { if (sessionOpen) gm.closeSession() }
         runCatching { gm.unInit() }
         sessionOpen = false
@@ -111,12 +109,9 @@ class GlyphController(private val context: Context) {
     private companion object {
         const val TAG = "GlyphController"
 
-        // Phone (4b) Glyph Bar zones: channels A1..A4 are indices 0..3.
-        const val CHANNEL_A1 = 0
-        const val CHANNEL_A2 = 1
-        const val CHANNEL_A3 = 2
-        const val CHANNEL_A4 = 3
-
+        // Phone (4b) exposes exactly four zones. Verified against the SDK
+        // binary: Glyph.DEVICE_25131_SIZE == 4, and Code_25131.A_1..A_4 are
+        // 0..3. The named constants are used above rather than raw ints.
         const val PERIOD_MS = 1200
         const val INTERVAL_MS = 40
         const val CYCLES = 1

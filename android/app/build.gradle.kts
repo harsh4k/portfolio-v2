@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
@@ -9,9 +11,11 @@ android {
 
     defaultConfig {
         applicationId = "dev.harshh.portfolio"
-        // TileService needs 24; the Glyph SDK needs 34 and is guarded at runtime
-        // so this APK still installs and runs on older, non-Nothing devices.
-        minSdk = 26
+        // Floor is set by the Glyph AAR, whose own manifest declares minSdk 33 —
+        // the manifest merger rejects anything lower. Android 13+ still covers
+        // effectively every current device, and GlyphController guards at
+        // runtime so the APK runs fine on non-Nothing hardware.
+        minSdk = 33
         targetSdk = 36
         versionCode = 1
         versionName = "1.0"
@@ -23,7 +27,7 @@ android {
             // Left unconfigured here so the file carries no secrets.
             val props = rootProject.file("keystore.properties")
             if (props.exists()) {
-                val p = java.util.Properties().apply { props.inputStream().use { load(it) } }
+                val p = Properties().apply { props.inputStream().use { load(it) } }
                 storeFile = rootProject.file(p.getProperty("storeFile"))
                 storePassword = p.getProperty("storePassword")
                 keyAlias = p.getProperty("keyAlias")
@@ -63,9 +67,10 @@ gradle.taskGraph.whenReady {
     val libs = file("libs").listFiles { f -> f.extension == "aar" }
     if (libs.isNullOrEmpty()) {
         throw GradleException(
-            "Missing Glyph SDK. Download the .aar from " +
+            "Missing Glyph SDK. glyph-matrix-sdk-2.0.aar is vendored in " +
+                "android/app/libs/ — restore it from " +
                 "https://github.com/Nothing-Developer-Programme/Glyph-Developer-Kit " +
-                "into android/app/libs/ — see android/app/libs/README.md."
+                "(sdk/glyph-matrix-sdk-2.0.aar). See android/app/libs/README.md."
         )
     }
 }

@@ -11,3 +11,5 @@
 /app/release
 *.keystore
 !debug.keystore
+/local.properties
+.kotlin/

@@ -6,6 +6,11 @@ Every Nothing-specific claim here was checked against the official Glyph
 Developer Kit, Nothing OS documentation, or device reviews. Where something
 could not be verified, it says so rather than guessing.
 
+The Android project **builds** — verified with AGP 8.9.1 / Gradle 8.11.1 /
+compileSdk 36 / JDK 17, producing a 9.1 MB APK containing the launcher activity,
+the Quick Settings tile, the widget provider and the Glyph permission. The Glyph
+API surface was confirmed by decompiling Nothing's shipped SDK binary.
+
 ---
 
 ## 1. The short answer on the lock screen
@@ -70,6 +75,10 @@ GSMArena lists only "Notification LED (on the back)", which is **incomplete**.
 The (4b) has a *Glyph Bar* (45 mini-LEDs across five segments), and the official
 Glyph Developer Kit names the device explicitly.
 
+Everything below was **decompiled from the shipped SDK binary**, not inferred
+from documentation: `Glyph.DEVICE_25131` = `"A009P"`,
+`Glyph.DEVICE_25131_SIZE` = `4`, and `Glyph.Code_25131.A_1..A_4` = `0,1,2,3`.
+
 **Available:**
 
 | Capability | Status |
@@ -113,10 +122,9 @@ Code / Posters.
 
 You need Android Studio and a JDK 17.
 
-1. **Get the Glyph SDK.** Download the `.aar` from
-   <https://github.com/Nothing-Developer-Programme/Glyph-Developer-Kit> into
-   `android/app/libs/`. The build fails with a clear message if it's missing.
-   (Nothing ships one AAR for both Glyph and Glyph Matrix.)
+1. **The Glyph SDK is already vendored** at
+   `android/app/libs/glyph-matrix-sdk-2.0.aar` (from Nothing's official repo),
+   so there is nothing to download. Skip to the next step.
 
 2. **Create a signing key:**
 
@@ -160,6 +168,15 @@ You need Android Studio and a JDK 17.
    adb install -r app/build/outputs/apk/release/app-release.apk
    ```
 
+   Without `keystore.properties` the output is `app-release-unsigned.apk`
+   instead, which **cannot be installed** — Android rejects unsigned APKs. Do
+   step 2 first.
+
+   The project requires **minSdk 33 (Android 13)**. That floor is set by the
+   Glyph AAR itself, whose manifest declares `minSdk 33`; the manifest merger
+   rejects anything lower. Your (4b) runs Android 16, so this is irrelevant in
+   practice.
+
 ### C. Add the Quick Settings tile — the lock-screen route
 
 1. Swipe down twice, then tap the edit (pencil) icon.
@@ -175,10 +192,19 @@ You need Android Studio and a JDK 17.
 
 ### E. Check the lock-screen widget question
 
-Long-press the lock screen -> **Customise** -> **Widgets**. If a third-party
-section or an app list appears, Nothing OS 4.1 allows it and the Harshit widget
-should be selectable. If only Nothing's own widgets are offered, it does not —
-use the Quick Settings tile instead.
+Two places to look, because Nothing OS and stock Android 16 expose this
+differently:
+
+1. **Nothing's own path:** Settings -> **Lock Screen** -> **Lock screen
+   widgets**. Historically this lists only Nothing's categories (clock, quick
+   settings, photos, weather) with no third-party section.
+2. **The stock Android 16 path**, if Nothing left it in place: Settings ->
+   **Display & touch** -> **Lock display** -> **Lock screen** -> **Widgets on
+   lock screen**, and enable the toggle.
+
+If either offers an app list, look for **Harshit** — the widget is a standard
+`AppWidgetProvider` and will be selectable. If neither does, Nothing OS does not
+support it, and the Quick Settings tile is your answer.
 
 ---
 
@@ -229,12 +255,8 @@ install size, so it is deliberately traded away.
 7. **Digital Asset Links is a hard dependency** for the chrome-less experience.
 8. **Nothing OS may background-kill sideloaded apps.** If the tile feels slow,
    exempt the app under Settings -> Apps -> Harshit -> Battery -> Unrestricted.
-9. **The Android project has not been compile-verified** — no Android SDK was
-   available in the environment where it was written. All XML is validated and
-   versions are pinned to a checked-compatible set (AGP 8.9.1 + Gradle 8.11.1 +
-   compileSdk 36 + JDK 17), but expect to resolve minor issues on first build in
-   Android Studio. `GlyphController.kt` flags the one API signature that was
-   inferred from the GDK's device table rather than read from a code sample.
+9. **minSdk is 33 (Android 13)**, forced by the Glyph AAR's own manifest. The
+   APK will not install on Android 12 or older.
 
 ---
 
