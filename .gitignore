@@ -4,3 +4,7 @@ dist/
 *.local
 image-originals/
 .playwright-mcp/
+
+# Stray downloads that have landed in the repo root via `git add .`
+*.exe
+download.jpg

@@ -11,7 +11,6 @@ export default function Navbar() {
   const navigate = useNavigate();
   const location = useLocation();
   const { navigateWithCurtain } = useCurtain();
-  const isHome = location.pathname === "/";
   const onOverview = location.pathname === "/overview";
   // Leaving a category page reuses the curtain that brought you in, so the
   // trip back reads as the same door closing rather than a hard cut.
@@ -32,6 +31,10 @@ export default function Navbar() {
     }
   }, [leavingCurtain, navigate, navigateWithCurtain]);
 
+  const goIntro = useCallback(() => {
+    navigate("/");
+  }, [navigate]);
+
   const scrollToSection = useCallback(
     (id: string) => {
       if (!onOverview) {
@@ -48,17 +51,11 @@ export default function Navbar() {
     [goOverview, leavingCurtain, onOverview],
   );
 
+  // This nav only ever mounts on /overview and the category pages, so an
+  // "Overview" tab pointed at the page you were already on. The first slot is
+  // the way back out to the intro instead; the rest are in-page sections.
   const navItems: SlideTabItem[] = [
-    ...(!isHome
-      ? [
-          {
-            id: "overview",
-            label: "Overview",
-            onClick: goOverview,
-            active: onOverview,
-          },
-        ]
-      : []),
+    { id: "intro", label: "CLaw", onClick: goIntro },
     { id: "work", label: "Work", onClick: () => scrollToSection("work") },
     { id: "about", label: "About", onClick: () => scrollToSection("about") },
     { id: "contact", label: "Contact", onClick: () => scrollToSection("contact") },

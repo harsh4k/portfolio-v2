@@ -1,12 +1,38 @@
+import {readdirSync} from 'node:fs';
+import {fileURLToPath} from 'node:url';
 import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
-import {defineConfig} from 'vite';
+import {defineConfig, type Plugin} from 'vite';
 import {VitePWA} from 'vite-plugin-pwa';
+
+/**
+ * Exposes the list of heavy public assets to the app as `virtual:offline-assets`
+ * so the offline warm-up never drifts out of sync with what's on disk. These
+ * live in public/ and so are invisible to import.meta.glob.
+ */
+function offlineAssets(): Plugin {
+  const id = 'virtual:offline-assets';
+  const resolved = '\0' + id;
+  return {
+    name: 'offline-assets',
+    resolveId: (source) => (source === id ? resolved : undefined),
+    load(source) {
+      if (source !== resolved) return;
+      const dir = fileURLToPath(new URL('./public/images', import.meta.url));
+      const urls = readdirSync(dir)
+        .filter((f) => !f.startsWith('.'))
+        .map((f) => `/images/${f}`)
+        .concat('/resume.pdf');
+      return `export default ${JSON.stringify(urls)};`;
+    },
+  };
+}
 
 export default defineConfig({
   plugins: [
     react(),
     tailwindcss(),
+    offlineAssets(),
     VitePWA({
       registerType: 'autoUpdate',
       // No includeAssets: globPatterns below already matches svg/png/webmanifest,
@@ -52,7 +78,20 @@ export default defineConfig({
             handler: 'CacheFirst',
             options: {
               cacheName: 'images',
-              expiration: {maxEntries: 40, maxAgeSeconds: 60 * 60 * 24 * 30},
+              expiration: {maxEntries: 60, maxAgeSeconds: 60 * 60 * 24 * 30},
+              cacheableResponse: {statuses: [0, 200]},
+            },
+          },
+          {
+            // The travel video. rangeRequests is what makes <video> work from a
+            // cache at all: the element asks for a byte range, and without the
+            // range plugin it gets a whole 200 where it expected a 206.
+            urlPattern: ({url}) => url.pathname.endsWith('.mp4'),
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'media',
+              rangeRequests: true,
+              expiration: {maxEntries: 4, maxAgeSeconds: 60 * 60 * 24 * 30},
               cacheableResponse: {statuses: [0, 200]},
             },
           },
@@ -78,8 +117,11 @@ export default defineConfig({
             },
           },
         ],
-        // lbt_vid.mp4 (1.4 MB) is deliberately absent: it is preload="none"
-        // behind a LazyMount, and ranged media through a SW is a known problem.
+        // Images and the video stay out of the precache on purpose — 3.7 MB is
+        // too much to push at every first-time visitor. They are pulled in
+        // afterwards by warm-offline-cache.ts once someone is actually using
+        // the site, which keeps first load cheap but still ends up fully
+        // offline-capable.
       },
       devOptions: {enabled: false},
     }),
