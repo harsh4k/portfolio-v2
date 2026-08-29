@@ -27,9 +27,15 @@ export interface Poster {
 export interface Thought {
   id: string;
   number: string;
-  image: string;
-  thought: string;
+  title: string;
+  body: string;
   tag: string;
+  /**
+   * Photo tiles only. Typographic tiles omit it and carry the bento's
+   * colour-block variation instead, so the grid never reads as six
+   * identical picture cards.
+   */
+  image?: string;
 }
 
 export interface TimelineItem {
