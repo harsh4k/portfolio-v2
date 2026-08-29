@@ -108,10 +108,12 @@ export default function ProjectDossier({
           fade in beside it once the hero scrolls past, rather than a second
           bar landing in the same corner and fighting it for space. */}
       <div
-        className="fixed inset-x-0 top-0 z-10 flex items-center justify-between gap-4 px-4 py-3 backdrop-blur transition-colors duration-300 md:px-8 md:py-4"
+        className="fixed inset-x-0 top-0 z-10 flex items-center justify-between gap-4 px-4 py-3 transition-[background-color,border-color,backdrop-filter] duration-300 md:px-8 md:py-4"
         style={{
           backgroundColor: pinned ? "color-mix(in srgb, var(--color-paper) 95%, transparent)" : "transparent",
           borderBottom: pinned ? "1px solid color-mix(in srgb, var(--color-ink) 10%, transparent)" : "1px solid transparent",
+          backdropFilter: pinned ? "blur(8px)" : "none",
+          WebkitBackdropFilter: pinned ? "blur(8px)" : "none",
         }}
       >
         <span
