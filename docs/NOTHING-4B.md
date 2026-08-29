@@ -32,14 +32,18 @@ lock screen.** Two independent limits, both real:
 So `LOCK SCREEN -> ONE TAP -> WEBSITE` with no unlock is **not achievable**. The
 closest real options, ranked:
 
-| Route | From a locked phone | Built? |
+| Route | From a locked phone | Needs |
 |---|---|---|
-| **Quick Settings tile** | swipe down, tap, unlock | yes |
-| Home-screen icon (PWA/APK) | unlock, tap | yes |
-| Home-screen widget, deep-linked | unlock, tap | yes |
-| Launcher long-press shortcut | unlock, long-press, tap | yes |
+| **Essential Key (double-press)** | press twice, unlock | a third-party remapper |
+| **Quick Settings tile** | swipe down, tap, unlock | built in this repo |
+| Home-screen icon (PWA/APK) | unlock, tap | built |
+| Home-screen widget, deep-linked | unlock, tap | built |
+| Launcher long-press shortcut | unlock, long-press, tap | built |
 
-**The Quick Settings tile is the fastest path and is what you should use.**
+**The Essential Key is the closest you can physically get** — a hardware button
+on the left edge, no screen interaction at all before the unlock. It needs a
+third-party remapper (section 5E). The **Quick Settings tile** is the best
+option that needs nothing beyond this repo.
 
 ---
 
@@ -63,7 +67,7 @@ closest real options, ranked:
   surface to its own widget set. The widget in this repo is a standard
   `AppWidgetProvider`: if Nothing OS allows third-party widgets on the lock
   screen it will appear in the picker with no extra work; if not, it stays a
-  home-screen widget. **Check it yourself in 30 seconds — step E below.**
+  home-screen widget. **Check it yourself in 30 seconds — step F below.**
   (The legacy `android:widgetCategory="keyguard"` flag is from Android 4.2-4.4
   and was removed in 5.0. It grants nothing on modern Android, so this project
   does not rely on it.)
@@ -190,7 +194,37 @@ You need Android Studio and a JDK 17.
 2. Drag the 4x1 widget out. Three chips deep-link to Overview / Websites /
    Posters; tapping the body opens the intro.
 
-### E. Check the lock-screen widget question
+### E. Essential Key -> your site (the closest to a physical shortcut)
+
+The (4b) has Nothing's **Essential Key** on the left edge. Nothing OS does not
+let you rebind it natively, but it can be remapped without root:
+
+1. Install **Essential Key Tools** (MIT, open source —
+   <https://github.com/KoukeNeko/EssentialKeyTools>, also on Play Store).
+2. Grant its accessibility service. It reads *hardware key events only* — the
+   README and privacy policy state it does not read screen content or text.
+3. Home -> *Key setup* -> press the Essential Key so it learns the identifier.
+4. Assign **double press** -> *Launch app* -> **Harshit**.
+5. Test in *Key Test* first, which shows detected gestures without firing them.
+
+Why double press: Nothing OS reserves **single** press for Essential Space at the
+system-policy level, and freeing it means disabling Essential Space and Recorder
+outright. Double, triple and long press need no such surgery.
+
+Caveats, stated honestly:
+
+- This is a **third-party app**, not a Nothing or Google API. It works by
+  observing the key event (`keyCode=0`, `scanCode=250`) through an accessibility
+  service.
+- It requires **Android 15+**; your (4b) is on 16.
+- It is documented as supporting "Nothing phones with an Essential Key" and
+  learns the key ID at runtime rather than hardcoding per-model values — but it
+  has **not been verified on the (4b) specifically**. Try it; if the key is
+  never learned in *Key setup*, that model is not supported and the Quick
+  Settings tile remains your best route.
+- It still cannot bypass the unlock. Nothing can.
+
+### F. Check the lock-screen widget question
 
 Two places to look, because Nothing OS and stock Android 16 expose this
 differently:
@@ -262,10 +296,14 @@ install size, so it is deliberately traded away.
 
 ## 9. Fastest route to the site, ranked
 
-1. **Quick Settings tile** — lock screen, swipe down, tap, unlock. *Best.*
-2. **Home-screen icon** — unlock, tap.
-3. **Widget chip** — unlock, tap a section directly.
-4. **Launcher long-press** — unlock, long-press, pick a section.
+1. **Essential Key, double press** — a physical button, no screen interaction
+   before the unlock. Needs the third-party remapper in section 5E. *Closest to
+   the goal.*
+2. **Quick Settings tile** — lock screen, swipe down, tap, unlock. *Best option
+   that needs nothing beyond this repo.*
+3. **Home-screen icon** — unlock, tap.
+4. **Widget chip** — unlock, tap a section directly.
+5. **Launcher long-press** — unlock, long-press, pick a section.
 
 ---
 
@@ -279,3 +317,9 @@ install size, so it is deliberately traded away.
 - Phone (4b) specs — <https://www.gsmarena.com/nothing_phone_(4b)_5g-14781.php>
 - TWA / Digital Asset Links — <https://developer.android.com/develop/ui/views/layout/webapps/guide-trusted-web-activities-version2>
 - android-browser-helper releases — <https://github.com/GoogleChrome/android-browser-helper/releases>
+- Essential Key Tools — <https://github.com/KoukeNeko/EssentialKeyTools>
+  (no-root Essential Key remapping; Android 15+; single press is reserved by
+  Nothing OS system policy, double/triple/long are free)
+- Phone (4b) has an Essential Key — BGR review, "The left side has Nothing's
+  Essential Key, though." <https://www.bgr.com/2241278/nothing-phone-4b-review/>
+  (note: GSMArena's spec sheet omits it)
