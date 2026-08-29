@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useLayoutEffect } from "react";
+import { lazy, Suspense, useEffect, useLayoutEffect, useRef } from "react";
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { MotionConfig } from "motion/react";
 import ErrorBoundary from "./components/ErrorBoundary";
@@ -35,11 +35,22 @@ function ThemeColorUpdater() {
   return null;
 }
 
-// reset scroll on route change — otherwise a shorter page inherits the previous page's scroll offset
+// reset scroll on route change — otherwise a shorter page inherits the previous page's scroll offset.
+// Exception: a project dossier (/websites/:id, /fun-code/:id) is an overlay on top of its own index
+// page, not a new page — resetting scroll there would both jump the grid to the top the instant a
+// dossier opens and strand it there once closed. Only reset when the category itself changes.
+function scrollBase(pathname: string) {
+  const projectSubroute = pathname.match(/^\/(websites|fun-code)(?:\/.+)?$/);
+  return projectSubroute ? `/${projectSubroute[1]}` : pathname;
+}
+
 function ScrollToTop() {
   const { pathname } = useLocation();
+  const prevBase = useRef<string | null>(null);
   useLayoutEffect(() => {
-    window.scrollTo(0, 0);
+    const base = scrollBase(pathname);
+    if (base !== prevBase.current) window.scrollTo(0, 0);
+    prevBase.current = base;
   }, [pathname]);
   return null;
 }
@@ -65,8 +76,14 @@ export default function App() {
               <Routes>
                 <Route path="/" element={<IntroPage />} />
                 <Route path="/overview" element={<HomePage />} />
+                {/* The :id variant renders the same page — the dossier is an overlay the page
+                    itself opens by reading useParams(), not a separate route element, since the
+                    layoutId shared-layout morph needs the plate and the dossier hero mounted in
+                    the same tree. */}
                 <Route path="/websites" element={<WebsitesPage />} />
+                <Route path="/websites/:id" element={<WebsitesPage />} />
                 <Route path="/fun-code" element={<FunCodePage />} />
+                <Route path="/fun-code/:id" element={<FunCodePage />} />
                 <Route path="/posters" element={<PostersPage />} />
                 <Route path="*" element={<NotFoundPage />} />
               </Routes>

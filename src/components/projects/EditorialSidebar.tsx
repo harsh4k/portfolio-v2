@@ -10,6 +10,8 @@ interface EditorialSidebarProps {
   description: string;
   totalCount: number;
   statsText?: string;
+  /** Index (0-based) of the plate nearest the viewport centre, if the page tracks it. */
+  activeIndex?: number;
 }
 
 export default function EditorialSidebar({
@@ -20,6 +22,7 @@ export default function EditorialSidebar({
   description,
   totalCount,
   statsText,
+  activeIndex = 0,
 }: EditorialSidebarProps) {
   return (
     <header>
@@ -53,8 +56,8 @@ export default function EditorialSidebar({
             {statsText}
           </span>
         )}
-        <span className="font-sans text-[10px] uppercase tracking-[0.15em] text-[#161513]/30">
-          IN VIEW 01 / {String(totalCount).padStart(2, "0")}
+        <span className="font-sans text-[10px] uppercase tracking-[0.15em] text-ink/30">
+          IN VIEW {String(activeIndex + 1).padStart(2, "0")} / {String(totalCount).padStart(2, "0")}
         </span>
       </div>
     </header>

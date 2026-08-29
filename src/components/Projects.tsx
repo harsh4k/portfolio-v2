@@ -1,6 +1,10 @@
 import { motion } from "motion/react";
 import { ArrowUpRight, Code2, Gamepad2, LayoutTemplate } from "lucide-react";
 import CurtainLink from "./ui/curtain-link";
+import { PROJECTS, POSTERS } from "../data";
+
+const websiteCount = PROJECTS.filter((p) => p.category === "websites").length;
+const funCount = PROJECTS.filter((p) => p.category === "fun").length;
 
 // Each card leaves through the curtain its destination is registered with in
 // ROUTE_CURTAINS, so the three pages stay distinguishable by feel.
@@ -9,21 +13,21 @@ const categories = [
     path: "/websites",
     title: "Websites",
     description: "Full-featured web applications — e-commerce, dashboards, and platforms built from the ground up.",
-    count: 3,
+    count: websiteCount,
     icon: Code2,
   },
   {
     path: "/fun-code",
     title: "Fun Code",
     description: "Experimental projects and creative coding — where constraints don't exist and ideas run free.",
-    count: 4,
+    count: funCount,
     icon: Gamepad2,
   },
   {
     path: "/posters",
     title: "Posters",
     description: "Poster designs exploring typography, composition, and visual hierarchy.",
-    count: 4,
+    count: POSTERS.length,
     icon: LayoutTemplate,
   },
 ];
