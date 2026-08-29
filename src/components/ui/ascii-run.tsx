@@ -1,6 +1,5 @@
 import * as React from "react";
 import { useReducedMotion } from "motion/react";
-import { imageToAscii } from "../../lib/ascii";
 import { useIsMobile } from "../../hooks/use-media";
 import { AsciiReadout } from "./ascii-readout";
 
@@ -18,16 +17,19 @@ const TINT: Record<NonNullable<TerminalRun["tint"]>, string> = {
   paper: "var(--color-paper)",
 };
 
-/** typing → decoding → painting → done. Each stage owns one timer. */
-type Phase = "idle" | "typing" | "decoding" | "painting" | "done";
+/** typing → decoding → done. Each stage owns one timer. */
+type Phase = "idle" | "typing" | "decoding" | "done";
 
 const KEY_MS = 34;
 const ENTER_PAUSE = 7; // key-ticks held between the last character and Enter
 const DECODE_MS = 720;
-const PAINT_MS = 700;
+const REVEAL_MS = 700;
 // `decoding Hackathon.webp [ … ] 100%` is the widest line in the transcript, so
 // the bar has to give ground on a phone or the terminal scrolls sideways.
 const BAR_CELLS = { narrow: 10, wide: 20 };
+// Matches the row budget `AsciiTerminal` computes for a window's art area, so
+// swapping ascii rows for a real photo keeps the same stacked-window height.
+const LINE_HEIGHT = { narrow: 6.5, wide: 7.6 };
 
 export function Caret() {
   return (
@@ -67,72 +69,45 @@ interface AsciiRunProps {
   run: TerminalRun;
   user: string;
   host: string;
-  /** Row budget for the art, so one window still fits one screen. */
+  /** Row budget the art used to fill as ascii text; now converted to a pixel
+   * height cap so a real photo still keeps one screen's worth of stacked
+   * windows fitting the viewport. */
   maxRows?: number;
 }
 
 export function AsciiRun({ run, user, host, maxRows = 30 }: AsciiRunProps) {
   const rootRef = React.useRef<HTMLDivElement>(null);
-  const artRef = React.useRef<HTMLDivElement>(null);
-  const probeRef = React.useRef<HTMLSpanElement>(null);
   const reduced = useReducedMotion();
   const isMobile = useIsMobile();
 
-  const [grid, setGrid] = React.useState({ cols: 0, cellAspect: 2, lineHeight: 0, fontFamily: "monospace" });
-  // null until the first decode lands; an empty array means it failed.
-  const [rows, setRows] = React.useState<string[] | null>(null);
   const [phase, setPhase] = React.useState<Phase>("idle");
   const [typed, setTyped] = React.useState(0);
   const [progress, setProgress] = React.useState(0);
-  const [painted, setPainted] = React.useState(0);
+  const [imgSize, setImgSize] = React.useState<{ w: number; h: number } | null>(null);
+  const [imgError, setImgError] = React.useState(false);
 
   const command = `pathfetch ${run.year}`;
   const file = run.image.split("/").pop() ?? run.image;
   const tint = TINT[run.tint ?? "paper"];
   const cells = isMobile ? BAR_CELLS.narrow : BAR_CELLS.wide;
+  const artHeight = Math.round(maxRows * (isMobile ? LINE_HEIGHT.narrow : LINE_HEIGHT.wide));
 
-  // Measure the character cell off a hidden probe rather than assuming the
-  // font's advance width, so a fallback font can't stretch the art.
-  React.useLayoutEffect(() => {
-    const art = artRef.current;
-    const probe = probeRef.current;
-    if (!art || !probe) return;
-    const read = () => {
-      const cell = probe.getBoundingClientRect();
-      const charWidth = cell.width / 100;
-      if (!charWidth || !art.clientWidth) return;
-      setGrid({
-        cols: Math.max(16, Math.floor(art.clientWidth / charWidth)),
-        cellAspect: Math.round((cell.height / charWidth) * 1000) / 1000,
-        lineHeight: cell.height,
-        fontFamily: getComputedStyle(probe).fontFamily,
-      });
-    };
-    read();
-    const observer = new ResizeObserver(read);
-    observer.observe(art);
-    return () => observer.disconnect();
-  }, []);
-
-  // Decode as soon as the grid is known — well before the run is triggered — so
-  // the progress bar is never waiting on real work. A resize re-decodes at the
-  // new column count without clearing `rows` first: blanking it would drop the
-  // art out of the page on every window drag and phone rotate.
+  // Preload as soon as the run mounts — well before the decode bar is
+  // triggered — so the progress bar is never waiting on real work.
   React.useEffect(() => {
-    if (!grid.cols) return;
     let cancelled = false;
-    imageToAscii(run.image, {
-      cols: grid.cols,
-      cellAspect: grid.cellAspect,
-      fontFamily: grid.fontFamily,
-      maxRows,
-    })
-      .then((art) => !cancelled && setRows(art))
-      .catch(() => !cancelled && setRows([]));
+    const img = new Image();
+    img.onload = () => {
+      if (!cancelled) setImgSize({ w: img.naturalWidth, h: img.naturalHeight });
+    };
+    img.onerror = () => {
+      if (!cancelled) setImgError(true);
+    };
+    img.src = run.image;
     return () => {
       cancelled = true;
     };
-  }, [run.image, grid.cols, grid.cellAspect, grid.fontFamily, maxRows]);
+  }, [run.image]);
 
   // Runs fire on scroll, so each window prints itself as it reaches the top of
   // the stack rather than all three racing on mount.
@@ -174,7 +149,7 @@ export function AsciiRun({ run, user, host, maxRows = 30 }: AsciiRunProps) {
     if (phase !== "decoding") return;
     if (reduced) {
       setProgress(100);
-      setPhase("painting");
+      setPhase("done");
       return;
     }
     const start = performance.now();
@@ -183,46 +158,21 @@ export function AsciiRun({ run, user, host, maxRows = 30 }: AsciiRunProps) {
       const t = Math.min(1, (now - start) / DECODE_MS);
       setProgress(Math.round(t * 100));
       if (t < 1) raf = requestAnimationFrame(tick);
-      else setPhase("painting");
+      else setPhase("done");
     };
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
   }, [phase, reduced]);
 
-  React.useEffect(() => {
-    if (phase !== "painting" || rows === null) return;
-    if (reduced || !rows.length) {
-      setPainted(rows.length);
-      setPhase("done");
-      return;
-    }
-    const start = performance.now();
-    let raf = 0;
-    const tick = (now: number) => {
-      const t = Math.min(1, (now - start) / PAINT_MS);
-      setPainted(Math.ceil(t * rows.length));
-      if (t < 1) raf = requestAnimationFrame(tick);
-      else setPhase("done");
-    };
-    raf = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf);
-  }, [phase, rows, reduced]);
-
   const started = phase !== "idle";
   const settled = phase === "done";
-  // Once the run has settled, show whatever the current decode holds — so art
-  // re-cut at a new width appears in full rather than at the old row count.
-  const shown = settled ? (rows?.length ?? 0) : painted;
-  const failed = settled && rows !== null && !rows.length;
+  const failed = settled && imgError;
   const facts: [string, string][] = [
     ["Year", run.year],
     ["Chapter", run.title],
     ["Log", run.description],
     ["Source", file],
-    [
-      "Render",
-      rows?.length ? `ascii · ${(rows[0] ?? "").length}×${rows.length}` : "—",
-    ],
+    ["Render", imgSize ? `image · ${imgSize.w}×${imgSize.h}` : "—"],
   ];
 
   return (
@@ -249,31 +199,18 @@ export function AsciiRun({ run, user, host, maxRows = 30 }: AsciiRunProps) {
       ) : null}
 
       <div className="mt-3 grid gap-4 md:grid-cols-[1fr_0.9fr] md:gap-8">
-        <div ref={artRef} className="relative min-w-0">
-          {/* Zero-sized clip around the probe: it still lays out (so it can be
-              measured) but can't widen the terminal's scroll box. */}
-          <span
-            aria-hidden="true"
-            className="pointer-events-none invisible absolute top-0 left-0 h-0 w-0 overflow-hidden"
-          >
-            <span
-              ref={probeRef}
-              className="inline-block font-mono text-[6px] leading-[1.08] whitespace-pre md:text-[7px]"
-            >
-              {"0".repeat(100)}
-            </span>
-          </span>
-          <pre
-            role="img"
-            aria-label={`ASCII rendering of a photograph from ${run.year}: ${run.title}`}
+        <div className="relative min-w-0 overflow-hidden rounded-md bg-night" style={{ height: artHeight }}>
+          <img
+            src={run.image}
+            alt={`Photo from ${run.year}: ${run.title}`}
+            loading="lazy"
+            decoding="async"
+            className="h-full w-full object-contain transition-opacity ease-out"
             style={{
-              color: tint,
-              minHeight: rows?.length ? rows.length * grid.lineHeight : undefined,
+              opacity: settled ? 1 : 0,
+              transitionDuration: reduced ? "0ms" : `${REVEAL_MS}ms`,
             }}
-            className="overflow-hidden font-mono text-[6px] leading-[1.08] opacity-85 md:text-[7px]"
-          >
-            {rows ? rows.slice(0, shown).join("\n") : ""}
-          </pre>
+          />
         </div>
 
         <AsciiReadout
