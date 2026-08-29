@@ -1,6 +1,6 @@
 import { motion } from "motion/react";
 import { TIMELINE } from "../data";
-import { RollingTextList, ListItem } from "./ui/rolling-list";
+import { AsciiTerminal, type TerminalRun } from "./ui/ascii-terminal";
 
 const timelineImages = [
   "/images/2024.webp",
@@ -8,16 +8,15 @@ const timelineImages = [
   "/images/2026.webp",
 ];
 
-const accentColors = ["#C9FF3D", "#F13A18", "#C9FF3D"];
+// One tint per year, so each run in the transcript reads as its own chapter.
+const tints: TerminalRun["tint"][] = ["lime", "signal", "paper"];
 
-const rollingItems: ListItem[] = TIMELINE.map((item, i) => ({
-  id: i + 1,
-  title: item.year,
-  category: item.title,
-  src: timelineImages[i],
-  alt: item.title,
-  accent: accentColors[i],
+const runs: TerminalRun[] = TIMELINE.map((item, i) => ({
+  year: item.year,
+  title: item.title,
   description: item.description,
+  image: timelineImages[i],
+  tint: tints[i],
 }));
 
 export default function Journey() {
@@ -33,11 +32,13 @@ export default function Journey() {
   return (
     <section
       id="path"
-      className="paper-grid relative overflow-hidden border-t border-[#161513]/15 px-4 py-20 text-[#161513] select-none sm:px-6 md:px-12 md:py-28"
+      className="paper-grid relative overflow-x-clip border-t border-[#161513]/15 px-4 py-20 text-[#161513] select-none sm:px-6 md:px-12 md:py-28"
     >
       <div className="pointer-events-none absolute right-0 top-0 h-full w-1/2 dark-hatch opacity-30" />
 
-      <div className="mx-auto max-w-[1600px]">
+      {/* relative so the hatch panel stays behind the content instead of
+          painting its diagonals across the terminal. */}
+      <div className="relative mx-auto max-w-[1600px]">
         <div className="mb-12 grid gap-4 border-b border-[#161513]/15 pb-8 md:grid-cols-[1.2fr_0.8fr] md:items-end">
           <div>
             <h2 className="mt-3 font-display text-[17vw] uppercase leading-[0.78] tracking-[-0.06em] md:text-[7.8vw]">
@@ -58,7 +59,7 @@ export default function Journey() {
           variants={fadeUp}
           className="mx-auto max-w-5xl"
         >
-          <RollingTextList items={rollingItems} />
+          <AsciiTerminal runs={runs} />
         </motion.div>
 
         <motion.div

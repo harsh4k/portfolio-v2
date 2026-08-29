@@ -62,7 +62,7 @@ export default function HomePage() {
   }, [isMobile]);
 
   return (
-    <div className="relative min-h-screen w-full bg-[#EEE9DC] text-[#161513] overflow-hidden antialiased">
+    <div className="relative min-h-screen w-full bg-[#EEE9DC] text-[#161513] overflow-x-clip antialiased">
       <div
         className="fixed inset-0 z-30 pointer-events-none opacity-[0.025] bg-repeat"
         style={{
