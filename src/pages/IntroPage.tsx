@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useState, type MouseEvent } from "react";
+import { lazy, Suspense, useEffect, useState, type MouseEvent, type TouchEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Cloud, FileText } from "lucide-react";
 import TrailGrid from "../components/ui/trail-grid";
@@ -62,7 +62,6 @@ function DeferredShader() {
         className="intro-fade fixed inset-0 h-full w-full"
         colors={INTRO_COLORS}
         speed={0.6}
-        backgroundColor={INTRO_COLORS[0]}
         minPixelRatio={1}
         maxPixelCount={1920 * 1080}
       />
@@ -73,6 +72,16 @@ function DeferredShader() {
 // Longest of the .uv-entry hover transitions (index.css) — the line-draw
 // width transition runs 0.5s, longer than the drow burst (0.38s total).
 const OVERVIEW_ANIMATION_MS = 520;
+
+// Toggles a CSS class on touchstart so the hover-only CTA animations
+// (index.css .uv-resume / .uv-entry) get to play on tap instead of doing
+// nothing on touch devices. Cleared shortly after — long enough for the full
+// animation to run, short enough not to look stuck if the tap doesn't navigate.
+function handleCtaTouchStart(e: TouchEvent<HTMLElement>) {
+  const el = e.currentTarget;
+  el.classList.add("is-active");
+  window.setTimeout(() => el.classList.remove("is-active"), 700);
+}
 
 export default function IntroPage() {
   const navigate = useNavigate();
@@ -109,10 +118,13 @@ export default function IntroPage() {
         {/* Interactive grid — desktop/hover only. Must share a stacking context
             with the mix-blend-mode text below (both inside <main>), otherwise
             the blend can't see the grid's lit cells as its backdrop. */}
-        <TrailGrid cellSize={40} duration={180} cellColor="var(--color-paper)" />
+        <TrailGrid cellSize={40} coarseCellSize={56} duration={180} cellColor="var(--color-paper)" />
 
-        {/* Inverting block: everything here reacts to the grid via mix-blend */}
+        {/* Inverting block: everything here reacts to the grid via mix-blend.
+            data-trail-quiet marks this box for TrailGrid's ambient wave (mobile)
+            to skip, so a passing crest never inverts the headline. */}
         <div
+          data-trail-quiet
           className="pointer-events-none flex flex-col items-center text-paper"
           style={{ mixBlendMode: "difference" }}
         >
@@ -146,15 +158,24 @@ export default function IntroPage() {
           className="intro-rise relative z-20 mt-14 flex flex-wrap items-center justify-center gap-8"
           style={{ animationDelay: "0.25s" }}
         >
-          <a href="/resume.pdf" target="_blank" rel="noreferrer" className="uv-resume">
+          <a
+            href="/resume.pdf"
+            target="_blank"
+            rel="noreferrer"
+            className="uv-resume"
+            onTouchStart={handleCtaTouchStart}
+          >
             <FileText className="uv-resume__icon h-4 w-4" strokeWidth={2} />
             <span>Resume</span>
           </a>
-          {/* ponytail: animation is CSS :hover-driven, so the delayed-navigate
-              trick only guarantees the full play-through on mouse (the pointer
-              stays over the link through the delay). Add a synthetic
-              hover/active class in index.css if touch needs the same effect. */}
-          <Link to="/overview" className="uv-entry" onClick={handleOverviewClick}>
+          {/* is-active mirrors :hover on touch (see index.css) so the delayed-
+              navigate trick still gets the full play-through on tap. */}
+          <Link
+            to="/overview"
+            className="uv-entry"
+            onClick={handleOverviewClick}
+            onTouchStart={handleCtaTouchStart}
+          >
             <div className="uv-entry__line" />
             <div className="uv-entry__line" />
             <span className="uv-entry__text">OVERVIEW</span>

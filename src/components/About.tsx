@@ -6,13 +6,28 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 
 gsap.registerPlugin(ScrollTrigger);
 
+// B.Tech intake year. The academic year rolls over in July, so this is the only
+// value to touch if the course start ever needs correcting.
+const COURSE_START_YEAR = 2026;
+const YEAR_WORDS = ["first", "second", "third", "fourth"];
+
+function courseStanding() {
+  const now = new Date();
+  const elapsed = now.getFullYear() - COURSE_START_YEAR - (now.getMonth() < 6 ? 1 : 0);
+  const word = YEAR_WORDS[elapsed];
+
+  return word
+    ? `I'm in my ${word} year of Computer Engineering at NMIMS, Mumbai, and I spend most of it building things I probably wasn't ready to build yet.`
+    : `I studied Computer Engineering at NMIMS, Mumbai, and spent most of it building things I probably wasn't ready to build yet.`;
+}
+
 const terminalLines = [
   { prompt: "$", text: "whoami" },
-  { prompt: "", text: "Hello, thank you for stopping by. My name is Harshit Chauhan. I'm a first-year Computer Engineering student at NMIMS, Mumbai." },
-  { prompt: "$", text: "cat skills.txt" },
-  { prompt: "", text: "I am a full-stack developer who enjoys building software that's both functional and intuitive. Whether it's the logic behind software, the architecture of a system, or the mysteries of space — I've always enjoyed understanding what happens beneath the surface." },
-  { prompt: "$", text: "echo $CURRENT_FOCUS" },
-  { prompt: "", text: "Building at the intersection of design and engineering. Currently focused on React, TypeScript, Node.js and scalable architecture." },
+  { prompt: "", text: `Hey, I'm Harshit — thanks for stopping by. ${courseStanding()}` },
+  { prompt: "$", text: "cat origin.txt" },
+  { prompt: "", text: "I was the kid who needed to know how everything worked — space, robotics, engineering, anything complicated enough to be worth the trouble. If I couldn't rebuild it from scratch in my head, I hadn't really understood it yet." },
+  { prompt: "$", text: "echo $HOW_I_LEARN" },
+  { prompt: "", text: "Not by studying. I build the thing, break it, and work out why it broke. Trial, error and a lot of exploring — that has been the whole method from the start, and it still is." },
   { prompt: "$", text: "_" },
 ];
 
@@ -93,7 +108,7 @@ export default function About() {
     <section
       ref={sectionRef}
       id="about"
-      className="paper-grid relative overflow-hidden bg-paper px-4 py-16 text-ink select-none sm:px-6 md:px-12 md:py-24"
+      className="paper-grid relative flex min-h-svh items-center overflow-hidden bg-paper px-4 py-16 text-ink select-none sm:px-6 md:px-12 md:py-24"
     >
       <div className="mx-auto w-full min-w-0 max-w-[1200px]">
         {/* Heading */}

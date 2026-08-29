@@ -1,7 +1,9 @@
 import { motion } from "motion/react";
 import { ArrowUpRight, Code2, Gamepad2, LayoutTemplate } from "lucide-react";
-import { Link } from "react-router-dom";
+import CurtainLink from "./ui/curtain-link";
 
+// Each card leaves through the curtain its destination is registered with in
+// ROUTE_CURTAINS, so the three pages stay distinguishable by feel.
 const categories = [
   {
     path: "/websites",
@@ -58,7 +60,7 @@ export default function Projects() {
                 transition={{ duration: 0.5, delay: i * 0.1, ease: [0.16, 1, 0.3, 1] }}
                 className="h-full"
               >
-                <Link
+                <CurtainLink
                   to={cat.path}
                   className="group relative flex h-[320px] flex-col justify-between overflow-hidden rounded-[32px] border border-[#161513]/20 bg-[#EEE9DC] p-6 text-left no-underline transition-all hover:-translate-y-1 hover:shadow-[0_8px_32px_rgba(22,21,19,0.1)] md:p-8"
                 >
@@ -77,7 +79,7 @@ export default function Projects() {
                   </div>
 
                   <p className="text-sm leading-relaxed text-[#161513]/62">{cat.description}</p>
-                </Link>
+                </CurtainLink>
               </motion.div>
             );
           })}

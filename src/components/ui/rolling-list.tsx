@@ -1,7 +1,7 @@
 import * as React from "react";
-import { useEffect, useState } from "react";
 import { motion } from "motion/react";
 import { cn } from "../../lib/utils";
+import { useIsMobile } from "../../hooks/use-media";
 
 interface ListItem {
   id: number;
@@ -92,14 +92,7 @@ interface RollingTextListProps {
 }
 
 function RollingTextList({ items }: RollingTextListProps) {
-  const [isMobile, setIsMobile] = useState(() => window.innerWidth < 768);
-
-  useEffect(() => {
-    const check = () => setIsMobile(window.innerWidth < 768);
-    check();
-    window.addEventListener("resize", check, { passive: true });
-    return () => window.removeEventListener("resize", check);
-  }, []);
+  const isMobile = useIsMobile();
 
   return (
     <div className="w-full flex flex-col">

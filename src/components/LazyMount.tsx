@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useCoarsePointer } from "../hooks/use-media";
 
 interface LazyMountProps {
   children: ReactNode;
@@ -19,9 +20,13 @@ interface LazyMountProps {
  * scroll pulls the placeholder into rootMargin, which mounts the real section
  * (carrying the same id) in its place.
  */
-export default function LazyMount({ children, minHeight, rootMargin = "600px", id }: LazyMountProps) {
+export default function LazyMount({ children, minHeight, rootMargin, id }: LazyMountProps) {
   const ref = useRef<HTMLDivElement>(null);
   const [visible, setVisible] = useState(false);
+  // A phone viewport is shorter than 600px worth of scroll-ahead, so the
+  // default margin can fire mid-scroll; give coarse pointers more headroom.
+  const coarse = useCoarsePointer();
+  const margin = rootMargin ?? (coarse ? "1200px" : "600px");
 
   useEffect(() => {
     if (visible) return;
@@ -35,11 +40,11 @@ export default function LazyMount({ children, minHeight, rootMargin = "600px", i
           observer.disconnect();
         }
       },
-      { rootMargin },
+      { rootMargin: margin },
     );
     observer.observe(el);
     return () => observer.disconnect();
-  }, [visible, rootMargin]);
+  }, [visible, margin]);
 
   if (!visible) {
     return <div ref={ref} id={id} style={{ minHeight }} />;

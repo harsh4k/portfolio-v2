@@ -1,6 +1,6 @@
 import { motion } from "motion/react";
 import { ArrowUpRight } from "lucide-react";
-import { Link } from "react-router-dom";
+import CurtainLink from "../ui/curtain-link";
 import { POSTERS } from "../../data";
 import PosterCard from "./PosterCard";
 
@@ -9,13 +9,13 @@ export default function PostersView() {
     <div className="relative overflow-hidden">
       <div className="relative z-10">
         <div className="mx-auto max-w-[1440px] px-4 pt-24 pb-16 md:pt-28">
-          <Link
+          <CurtainLink
             to="/overview"
             className="inline-flex items-center gap-2 rounded-full border border-[#161513]/20 px-4 py-2 font-sans text-[10px] uppercase tracking-[0.18em] text-[#161513]/60 transition-colors hover:bg-[#161513] hover:text-[#EEE9DC]"
           >
             <ArrowUpRight className="h-3 w-3 rotate-[-45deg]" />
             Back
-          </Link>
+          </CurtainLink>
 
           <div className="mt-16 md:mt-20">
             <p className="max-w-xl text-sm leading-relaxed text-[#161513]/65">
@@ -50,20 +50,20 @@ export default function PostersView() {
               Explore more
             </p>
             <div className="mt-4 flex flex-wrap items-center gap-4">
-              <Link
+              <CurtainLink
                 to="/websites"
                 className="group inline-flex items-center gap-2 rounded-full border border-[#161513]/20 px-4 py-2 font-sans text-[10px] uppercase tracking-[0.16em] text-[#161513]/60 transition-all hover:bg-[#F13A18] hover:text-[#EEE9DC] hover:border-[#F13A18]"
               >
                 View Websites
                 <ArrowUpRight className="h-3 w-3 transition-transform duration-[0.35s] group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
-              </Link>
-              <Link
+              </CurtainLink>
+              <CurtainLink
                 to="/fun-code"
                 className="group inline-flex items-center gap-2 rounded-full border border-[#161513]/20 px-4 py-2 font-sans text-[10px] uppercase tracking-[0.16em] text-[#161513]/60 transition-all hover:bg-[#C9FF3D] hover:text-[#161513] hover:border-[#C9FF3D]"
               >
                 View Fun Code
                 <ArrowUpRight className="h-3 w-3 transition-transform duration-[0.35s] group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
-              </Link>
+              </CurtainLink>
             </div>
           </motion.div>
         </div>
