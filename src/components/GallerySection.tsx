@@ -1,6 +1,6 @@
-import { useEffect, useState } from "react";
 import { motion } from "motion/react";
 import { CircularGallery, type GalleryItem } from "./ui/circular-gallery-2";
+import { useIsMobile } from "../hooks/use-media";
 
 const galleryItems: GalleryItem[] = Array.from({ length: 12 }, (_, i) => ({
   image: `/images/v${i + 1}.webp`,
@@ -8,14 +8,7 @@ const galleryItems: GalleryItem[] = Array.from({ length: 12 }, (_, i) => ({
 }));
 
 export default function GallerySection() {
-  const [isMobile, setIsMobile] = useState(() => window.innerWidth < 768);
-
-  useEffect(() => {
-    const check = () => setIsMobile(window.innerWidth < 768);
-    check();
-    window.addEventListener("resize", check, { passive: true });
-    return () => window.removeEventListener("resize", check);
-  }, []);
+  const isMobile = useIsMobile();
 
   return (
     <section

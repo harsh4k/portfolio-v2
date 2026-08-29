@@ -1,5 +1,5 @@
 import { ArrowLeft } from "lucide-react";
-import { Link } from "react-router-dom";
+import CurtainLink from "../ui/curtain-link";
 import type { LucideIcon } from "lucide-react";
 
 interface EditorialSidebarProps {
@@ -23,13 +23,13 @@ export default function EditorialSidebar({
 }: EditorialSidebarProps) {
   return (
     <header>
-      <Link
+      <CurtainLink
         to="/overview"
         className="inline-flex items-center gap-2 rounded-full border border-[#161513]/20 px-4 py-2 font-sans text-[10px] uppercase tracking-[0.18em] text-[#161513]/60 transition-colors hover:bg-[#161513] hover:text-[#EEE9DC]"
       >
         <ArrowLeft className="h-3 w-3" />
         Back
-      </Link>
+      </CurtainLink>
 
       <div className="mt-12 flex items-start gap-5">
         <Icon className={`mt-1.5 h-6 w-6 shrink-0 ${iconClass}`} />

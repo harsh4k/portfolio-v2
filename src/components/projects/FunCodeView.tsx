@@ -1,7 +1,7 @@
 import { motion } from "motion/react";
 import { ArrowUpRight } from "lucide-react";
 import { Sparkles } from "lucide-react";
-import { Link } from "react-router-dom";
+import CurtainLink from "../ui/curtain-link";
 import { PROJECTS } from "../../data";
 import EditorialSidebar from "./EditorialSidebar";
 import EditorialCard from "./EditorialCard";
@@ -40,20 +40,20 @@ export default function FunCodeView() {
           Want to see more?
         </p>
         <div className="mt-4 flex flex-wrap items-center gap-4">
-          <Link
+          <CurtainLink
             to="/websites"
             className="group inline-flex items-center gap-2 rounded-full border border-[#161513]/20 px-4 py-2 font-sans text-[10px] uppercase tracking-[0.16em] text-[#161513]/60 transition-all hover:bg-[#F13A18] hover:text-[#EEE9DC] hover:border-[#F13A18]"
           >
             View Websites
             <ArrowUpRight className="h-3 w-3 transition-transform duration-[0.35s] group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
-          </Link>
-          <Link
+          </CurtainLink>
+          <CurtainLink
             to="/posters"
             className="group inline-flex items-center gap-2 rounded-full border border-[#161513]/20 px-4 py-2 font-sans text-[10px] uppercase tracking-[0.16em] text-[#161513]/60 transition-all hover:bg-[#161513] hover:text-[#EEE9DC]"
           >
             View Posters
             <ArrowUpRight className="h-3 w-3 transition-transform duration-[0.35s] group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
-          </Link>
+          </CurtainLink>
         </div>
       </motion.div>
     </div>

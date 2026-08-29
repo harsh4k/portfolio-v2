@@ -44,10 +44,11 @@ export default function Contact() {
     }
   };
 
+  // pb-28 clears the bottom-docked nav, which is fixed over the page
   return (
     <footer
       id="contact"
-      className="dark-grid relative min-h-screen border-t border-[#EEE9DC]/10 px-4 pt-8 pb-28 text-[#EEE9DC] select-none sm:px-6 md:px-12 md:pb-8"
+      className="dark-grid relative min-h-screen border-t border-[#EEE9DC]/10 px-4 pt-8 pb-[calc(7rem+env(safe-area-inset-bottom))] text-[#EEE9DC] select-none sm:px-6 md:px-12"
     >
       <div className="mx-auto flex min-h-[calc(100vh-4rem)] max-w-[1600px] flex-col justify-between gap-12">
         <div className="flex items-start justify-end border-b border-[#EEE9DC]/10 pb-5 font-sans text-[10px] uppercase tracking-[0.2em] text-[#EEE9DC]/50">
@@ -155,7 +156,7 @@ export default function Contact() {
           <button onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })} className="text-left hover:text-[#EEE9DC]">
             Back to top
           </button>
-          <span>2026 portfolio system</span>
+          <span>{new Date().getFullYear()} portfolio system</span>
         </motion.div>
       </div>
     </footer>

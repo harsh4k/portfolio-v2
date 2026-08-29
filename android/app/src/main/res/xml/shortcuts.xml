@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Long-press the launcher icon. Mirrors the PWA manifest's `shortcuts`, so
+     the installed-from-Chrome and installed-from-APK experiences match. -->
+<shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
+    <shortcut
+        android:shortcutId="overview"
+        android:enabled="true"
+        android:shortcutShortLabel="@string/shortcut_overview">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:targetPackage="dev.harshh.portfolio"
+            android:targetClass="dev.harshh.portfolio.MainActivity"
+            android:data="https://harshh.pages.dev/overview" />
+    </shortcut>
+    <shortcut
+        android:shortcutId="websites"
+        android:enabled="true"
+        android:shortcutShortLabel="@string/shortcut_websites">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:targetPackage="dev.harshh.portfolio"
+            android:targetClass="dev.harshh.portfolio.MainActivity"
+            android:data="https://harshh.pages.dev/websites" />
+    </shortcut>
+    <shortcut
+        android:shortcutId="posters"
+        android:enabled="true"
+        android:shortcutShortLabel="@string/shortcut_posters">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:targetPackage="dev.harshh.portfolio"
+            android:targetClass="dev.harshh.portfolio.MainActivity"
+            android:data="https://harshh.pages.dev/posters" />
+    </shortcut>
+</shortcuts>
